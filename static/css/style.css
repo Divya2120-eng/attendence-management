@@ -1,0 +1,192 @@
+/* Modern UI styling for Dynamic QR Attendance System */
+
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --bg-dark: #0f172a;
+  --card-bg: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f8fafc;
+  color: var(--text-main);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Glass & Card effects */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+}
+
+.card-header-gradient {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+}
+
+/* Dynamic QR Display */
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 2px dashed #cbd5e1;
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+}
+
+.qr-container.active {
+  border-color: #4f46e5;
+  box-shadow: 0 0 20px rgba(79, 70, 229, 0.15);
+}
+
+.qr-image-wrapper {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.qr-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Pulse animation for active QR */
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.02); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.pulse-active {
+  animation: pulse-ring 2s infinite ease-in-out;
+}
+
+/* Scanner viewport styling */
+#qr-reader {
+  width: 100% !important;
+  max-width: 450px;
+  margin: 0 auto;
+  border: 2px solid #4f46e5 !important;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #000;
+}
+
+#qr-reader video {
+  border-radius: 0.75rem;
+  width: 100% !important;
+}
+
+/* Device badge */
+.badge-device {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  background-color: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+}
+
+.badge-present {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-absent {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Timer ring */
+.timer-badge {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.timer-badge.warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.timer-badge.danger {
+  background: #fee2e2;
+  color: #b91c1c;
+  animation: pulse-ring 1s infinite;
+}
+
+/* Locked Logout button */
+.btn-locked {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+  position: relative;
+}
+
+.btn-locked:hover::after {
+  content: "Locked: Active QR session in progress!";
+  position: absolute;
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 50;
+}
+
+/* Print styling */
+@media print {
+  body {
+    background: white !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .glass-card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}

@@ -1,0 +1,495 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Attendance Portal • Dynamic QR{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div>
+      <div class="flex items-center space-x-2 text-indigo-300 text-xs font-bold uppercase tracking-wider mb-2">
+        <i data-lucide="radio" class="w-4 h-4 text-emerald-400 animate-pulse"></i>
+        <span>Dynamic QR Attendance Engine</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black">{{ session.get('full_name') }}</h1>
+      <p class="text-slate-300 text-sm mt-1">Class: <strong class="text-white">Third Year CSE</strong> • Select subject to launch dynamic QR session.</p>
+    </div>
+
+    <!-- Active Indicator -->
+    <div id="session-status-badge" class="hidden sm:flex items-center space-x-2 bg-indigo-900/60 border border-indigo-700 px-4 py-2 rounded-xl">
+      <span class="w-3 h-3 bg-slate-400 rounded-full" id="status-dot"></span>
+      <span class="text-xs font-bold uppercase tracking-wider text-slate-200" id="status-text">No Active Session</span>
+    </div>
+  </div>
+
+  <!-- SECTION 1: START NEW ATTENDANCE (If no active session) -->
+  <div id="start-session-card" class="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 sm:p-8">
+    <div class="max-w-2xl">
+      <h2 class="text-lg font-black text-slate-900 flex items-center space-x-2">
+        <i data-lucide="play-circle" class="w-5 h-5 text-indigo-600"></i>
+        <span>Launch Dynamic Attendance Session</span>
+      </h2>
+      <p class="text-xs text-slate-500 mt-1 mb-6">
+        Generate an expiring, dynamic rotating QR code for your lecture. Set the duration after which the session automatically closes.
+      </p>
+
+      <form id="start-session-form" onsubmit="handleStartSession(event);" class="space-y-5">
+        
+        <!-- Subject Selection -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            Select Course / Subject
+          </label>
+          <div class="relative">
+            <select name="subject_id" id="subject-select" required
+                    class="w-full p-3 text-sm bg-slate-50 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+              {% for s in subjects %}
+                <option value="{{ s.id }}">
+                  {{ s.code }} - {{ s.name }} ({{ s.class_name }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Duration Selection -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+            QR Active Validity Duration
+          </label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+            <button type="button" onclick="setDuration(30)" class="duration-btn py-2 px-3 text-xs font-bold border border-slate-200 rounded-xl hover:border-indigo-500 hover:text-indigo-600 transition">
+              30 Seconds
+            </button>
+            <button type="button" onclick="setDuration(60)" class="duration-btn py-2 px-3 text-xs font-bold border border-indigo-600 bg-indigo-50 text-indigo-700 rounded-xl transition">
+              60 Seconds (1 Min)
+            </button>
+            <button type="button" onclick="setDuration(120)" class="duration-btn py-2 px-3 text-xs font-bold border border-slate-200 rounded-xl hover:border-indigo-500 hover:text-indigo-600 transition">
+              2 Minutes
+            </button>
+            <button type="button" onclick="setDuration(300)" class="duration-btn py-2 px-3 text-xs font-bold border border-slate-200 rounded-xl hover:border-indigo-500 hover:text-indigo-600 transition">
+              5 Minutes
+            </button>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs text-slate-500">Custom Duration:</span>
+            <input type="number" id="custom-duration" min="10" max="1800" value="60" 
+                   class="w-24 p-1.5 text-xs border border-slate-300 rounded-lg outline-none font-mono">
+            <span class="text-xs text-slate-500">seconds</span>
+          </div>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-xl flex items-start space-x-3 text-xs text-indigo-900">
+          <i data-lucide="shield-alert" class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5"></i>
+          <div>
+            <strong class="font-bold">Anti-Proxy Security Rules Active:</strong>
+            <p class="mt-0.5 text-indigo-700">QR code rotates cryptographic tokens every 15 seconds. Photos sent over WhatsApp will expire immediately. Student logouts are automatically disabled during this session.</p>
+          </div>
+        </div>
+
+        <button type="submit" 
+                class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-8 rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center space-x-2 text-sm">
+          <i data-lucide="qr-code" class="w-5 h-5"></i>
+          <span>Generate Dynamic QR & Start Attendance</span>
+        </button>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- SECTION 2: LIVE DYNAMIC QR STAGE (Visible during active session) -->
+  <div id="active-session-stage" class="hidden space-y-6">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- Big Dynamic QR Screen for Classroom Projection -->
+      <div class="lg:col-span-7 bg-white border-2 border-indigo-500 rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col items-center text-center">
+        
+        <div class="w-full flex items-center justify-between pb-4 border-b border-slate-100">
+          <div class="text-left">
+            <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Live Lecture Session</span>
+            <h3 class="text-lg font-black text-slate-900" id="live-subject-name">Operating System</h3>
+            <p class="text-xs text-slate-500">Third Year CSE</p>
+          </div>
+          
+          <!-- Countdown Timer Display -->
+          <div class="text-right">
+            <span class="text-[11px] font-bold text-slate-400 uppercase">Time Remaining</span>
+            <div id="countdown-box" class="timer-badge">
+              <span id="countdown-timer">00:00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic QR Container -->
+        <div class="my-6 flex flex-col items-center">
+          <div class="qr-container active p-4 rounded-2xl bg-white shadow-inner">
+            <div class="qr-image-wrapper w-64 h-64 sm:w-80 sm:h-80">
+              <img id="dynamic-qr-image" src="" alt="Dynamic QR Code" class="rounded-xl">
+            </div>
+          </div>
+          
+          <div class="mt-4 flex items-center space-x-2 text-xs font-medium text-slate-600">
+            <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
+            <span>QR rotating security token updates every 15s</span>
+          </div>
+          
+          <!-- Manual 6-Digit Backup Code (Useful if camera lens is damaged) -->
+          <div class="mt-3 bg-slate-100 px-4 py-1.5 rounded-lg border border-slate-200">
+            <span class="text-xs text-slate-500">Class Backup Token: </span>
+            <strong class="font-mono text-sm text-indigo-700 tracking-wider" id="backup-token-display">------</strong>
+          </div>
+        </div>
+
+        <!-- Session Controls -->
+        <div class="w-full pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <p class="text-xs text-slate-500">
+            Students scan using their registered device.
+          </p>
+          <button type="button" onclick="closeActiveSession();" 
+                  class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition shadow flex items-center space-x-1.5">
+            <i data-lucide="stop-circle" class="w-4 h-4"></i>
+            <span>End Attendance Now</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Live Scanned Stream -->
+      <div class="lg:col-span-5 bg-white border border-slate-200 rounded-3xl shadow-sm p-6 sm:p-8 flex flex-col h-full">
+        
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+              <i data-lucide="users" class="w-4 h-4 text-emerald-600"></i>
+              <span>Live Attendance Feed</span>
+            </h3>
+            <p class="text-xs text-slate-500">Students scanning in real-time</p>
+          </div>
+          <div class="text-right">
+            <span class="text-2xl font-black text-indigo-600" id="live-present-count">0</span>
+            <span class="text-xs text-slate-400">/ <span id="live-total-count">0</span></span>
+          </div>
+        </div>
+
+        <!-- Scanned Students Live List -->
+        <div class="flex-grow overflow-y-auto max-h-[380px] space-y-2 pr-1" id="live-scanned-list">
+          <div class="text-center py-12 text-slate-400 text-xs italic" id="empty-scan-msg">
+            <i data-lucide="scan-line" class="w-8 h-8 mx-auto text-slate-300 mb-2"></i>
+            Waiting for students to scan QR code...
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- SECTION 3: SESSION COMPLETION REPORT (When session concludes) -->
+  <div id="session-report-card" class="hidden space-y-6">
+    
+    <div class="bg-white border border-slate-200 rounded-3xl shadow-xl p-6 sm:p-8">
+      
+      <!-- Report Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+        <div>
+          <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+            Session Completed
+          </span>
+          <h2 class="text-2xl font-black text-slate-900 mt-2" id="report-subject-title">Operating System • Attendance Report</h2>
+          <p class="text-xs text-slate-500 mt-0.5" id="report-timestamp">Generated on ...</p>
+        </div>
+
+        <!-- Export & Action Buttons -->
+        <div class="flex items-center space-x-3 no-print">
+          <button onclick="window.print();" class="border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center space-x-1.5 shadow-sm">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>Print Report</span>
+          </button>
+          <a id="btn-export-csv" href="#" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center space-x-1.5 shadow-sm">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Export CSV</span>
+          </a>
+          <button onclick="resetToNewSession();" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center space-x-1.5 shadow-sm">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>New Session</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Report Analytics Summary Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 my-6">
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <p class="text-[11px] font-bold text-slate-500 uppercase">Total Enrolled</p>
+          <p class="text-2xl font-black text-slate-900" id="report-total">0</p>
+        </div>
+        <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
+          <p class="text-[11px] font-bold text-emerald-700 uppercase">Present Count</p>
+          <p class="text-2xl font-black text-emerald-800" id="report-present">0</p>
+        </div>
+        <div class="bg-rose-50 p-4 rounded-2xl border border-rose-200">
+          <p class="text-[11px] font-bold text-rose-700 uppercase">Absent Count</p>
+          <p class="text-2xl font-black text-rose-800" id="report-absent">0</p>
+        </div>
+        <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-200">
+          <p class="text-[11px] font-bold text-indigo-700 uppercase">Attendance Rate</p>
+          <p class="text-2xl font-black text-indigo-800" id="report-percentage">0%</p>
+        </div>
+      </div>
+
+      <!-- Full Student Roster: Present vs Absent List -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-600">
+          <thead class="bg-slate-100 text-xs uppercase font-bold text-slate-700">
+            <tr>
+              <th class="p-3">Roll Number</th>
+              <th class="p-3">Student Name</th>
+              <th class="p-3">Status</th>
+              <th class="p-3">Scan Timestamp</th>
+              <th class="p-3">Verified Device Fingerprint</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100" id="report-table-body">
+            <!-- Populated via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let activeSessionId = null;
+  let timerInterval = null;
+  let qrRefreshInterval = null;
+  let livePollInterval = null;
+  let remainingSeconds = 60;
+
+  function setDuration(sec) {
+    document.getElementById('custom-duration').value = sec;
+    document.querySelectorAll('.duration-btn').forEach(btn => {
+      btn.className = "duration-btn py-2 px-3 text-xs font-bold border border-slate-200 rounded-xl hover:border-indigo-500 hover:text-indigo-600 transition";
+    });
+    event.target.className = "duration-btn py-2 px-3 text-xs font-bold border border-indigo-600 bg-indigo-50 text-indigo-700 rounded-xl transition";
+  }
+
+  async function handleStartSession(event) {
+    event.preventDefault();
+    const subjectId = document.getElementById('subject-select').value;
+    const duration = parseInt(document.getElementById('custom-duration').value, 10) || 60;
+
+    try {
+      const res = await fetch('/api/session/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject_id: subjectId,
+          duration_seconds: duration
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        activeSessionId = data.session_id;
+        remainingSeconds = duration;
+        
+        // Show Stage
+        document.getElementById('start-session-card').classList.add('hidden');
+        document.getElementById('session-report-card').classList.add('hidden');
+        document.getElementById('active-session-stage').classList.remove('hidden');
+
+        document.getElementById('live-subject-name').innerText = data.subject_name;
+        document.getElementById('status-dot').className = "w-3 h-3 bg-emerald-500 rounded-full animate-ping";
+        document.getElementById('status-text').innerText = "Session Active";
+        document.getElementById('status-text').className = "text-xs font-bold uppercase tracking-wider text-emerald-400";
+
+        // Load Initial QR
+        refreshDynamicQr();
+        
+        // Start Timer
+        startCountdown();
+
+        // Refresh QR token periodically every 15 seconds
+        qrRefreshInterval = setInterval(refreshDynamicQr, 15000);
+
+        // Poll live scanned students every 2.5 seconds
+        livePollInterval = setInterval(pollLiveStatus, 2500);
+        pollLiveStatus();
+
+      } else {
+        alert(data.error || "Failed to start session.");
+      }
+    } catch (e) {
+      alert("Error starting session: " + e.message);
+    }
+  }
+
+  async function refreshDynamicQr() {
+    if (!activeSessionId) return;
+    try {
+      const res = await fetch(`/api/session/${activeSessionId}/qr`);
+      const data = await res.json();
+      if (data.is_active) {
+        document.getElementById('dynamic-qr-image').src = data.qr_image;
+        document.getElementById('backup-token-display').innerText = data.token.slice(-6);
+      } else {
+        // Expired on server side
+        endAndShowReport();
+      }
+    } catch (e) {
+      console.log("Error refreshing QR:", e);
+    }
+  }
+
+  function startCountdown() {
+    updateTimerDisplay();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      remainingSeconds--;
+      updateTimerDisplay();
+      if (remainingSeconds <= 0) {
+        clearInterval(timerInterval);
+        endAndShowReport();
+      }
+    }, 1000);
+  }
+
+  function updateTimerDisplay() {
+    const mins = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
+    const secs = (remainingSeconds % 60).toString().padStart(2, '0');
+    const box = document.getElementById('countdown-box');
+    const text = document.getElementById('countdown-timer');
+    text.innerText = `${mins}:${secs}`;
+
+    if (remainingSeconds <= 10) {
+      box.className = "timer-badge danger";
+    } else if (remainingSeconds <= 30) {
+      box.className = "timer-badge warning";
+    } else {
+      box.className = "timer-badge";
+    }
+  }
+
+  async function pollLiveStatus() {
+    if (!activeSessionId) return;
+    try {
+      const res = await fetch(`/api/session/${activeSessionId}/live-status`);
+      const data = await res.json();
+      
+      document.getElementById('live-present-count').innerText = data.present_count;
+      document.getElementById('live-total-count').innerText = data.total_enrolled;
+
+      const listContainer = document.getElementById('live-scanned-list');
+      if (data.records && data.records.length > 0) {
+        listContainer.innerHTML = data.records.map(r => `
+          <div class="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between text-xs transition animate-fade-in">
+            <div class="flex items-center space-x-2.5">
+              <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+              <div>
+                <p class="font-bold text-slate-900">${r.full_name}</p>
+                <p class="text-[10px] text-slate-500 font-mono">${r.roll_no}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded text-[10px]">PRESENT</span>
+              <p class="text-[10px] text-slate-400 mt-0.5">${r.scanned_at.split(' ')[1] || r.scanned_at}</p>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        listContainer.innerHTML = `
+          <div class="text-center py-12 text-slate-400 text-xs italic">
+            Waiting for students to scan QR code...
+          </div>
+        `;
+      }
+
+      if (!data.is_active && remainingSeconds > 0) {
+        endAndShowReport();
+      }
+    } catch (e) {
+      console.log("Error polling live status:", e);
+    }
+  }
+
+  async function closeActiveSession() {
+    if (!activeSessionId) return;
+    if (!confirm("Are you sure you want to conclude attendance early?")) return;
+    
+    try {
+      await fetch(`/api/session/${activeSessionId}/close`, { method: 'POST' });
+      endAndShowReport();
+    } catch (e) {
+      alert("Error closing session: " + e.message);
+    }
+  }
+
+  async function endAndShowReport() {
+    clearInterval(timerInterval);
+    clearInterval(qrRefreshInterval);
+    clearInterval(livePollInterval);
+
+    document.getElementById('active-session-stage').classList.add('hidden');
+    document.getElementById('session-report-card').classList.remove('hidden');
+
+    document.getElementById('status-dot').className = "w-3 h-3 bg-slate-400 rounded-full";
+    document.getElementById('status-text').innerText = "Session Ended";
+    document.getElementById('status-text').className = "text-xs font-bold uppercase tracking-wider text-slate-400";
+
+    // Fetch Full Report
+    try {
+      const res = await fetch(`/api/session/${activeSessionId}/report`);
+      const report = await res.json();
+
+      document.getElementById('report-subject-title').innerText = `${report.session.subject_name} • Class Attendance Report`;
+      document.getElementById('report-timestamp').innerText = `Session Conducted on ${report.session.started_at} | Faculty: ${report.session.teacher_name}`;
+      document.getElementById('report-total').innerText = report.total_students;
+      document.getElementById('report-present').innerText = report.present_count;
+      document.getElementById('report-absent').innerText = report.absent_count;
+      document.getElementById('report-percentage').innerText = `${report.attendance_percentage}%`;
+
+      document.getElementById('btn-export-csv').href = `/session/${activeSessionId}/export-csv`;
+
+      // Render Student Table
+      const tbody = document.getElementById('report-table-body');
+      tbody.innerHTML = report.students.map(s => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="p-3 font-mono font-bold text-xs text-slate-900">${s.roll_no}</td>
+          <td class="p-3 font-semibold text-slate-900">${s.full_name}</td>
+          <td class="p-3">
+            ${s.status === 'PRESENT' 
+              ? `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-bold">PRESENT</span>`
+              : `<span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-0.5 rounded-full font-bold">ABSENT</span>`
+            }
+          </td>
+          <td class="p-3 text-xs font-mono text-slate-500">
+            ${s.scanned_at || '<span class="text-slate-300">—</span>'}
+          </td>
+          <td class="p-3 text-xs font-mono text-indigo-700">
+            ${s.device_id || '<span class="text-slate-300">—</span>'}
+          </td>
+        </tr>
+      `).join('');
+
+      lucide.createIcons();
+
+    } catch (e) {
+      alert("Error loading final report: " + e.message);
+    }
+  }
+
+  function resetToNewSession() {
+    activeSessionId = null;
+    document.getElementById('session-report-card').classList.add('hidden');
+    document.getElementById('start-session-card').classList.remove('hidden');
+  }
+</script>
+{% endblock %}

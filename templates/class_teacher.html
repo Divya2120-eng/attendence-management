@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}Class Teacher Admin Panel • Smart Attendance{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header Banner -->
+  <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div>
+      <div class="flex items-center space-x-2 text-amber-300 text-xs font-bold uppercase tracking-wider mb-2">
+        <i data-lucide="crown" class="w-4 h-4"></i>
+        <span>Designated Single Class Teacher (Head Administrator)</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black">{{ session.get('full_name') }}</h1>
+      <p class="text-indigo-200 text-sm mt-1">Class Teacher for: <strong class="text-white">Third Year CSE</strong> (Computer Science & Engineering)</p>
+    </div>
+
+    <!-- Quick action to Take Attendance directly as Class Teacher -->
+    <div class="flex flex-wrap items-center gap-3">
+      <a href="/teacher" class="bg-amber-400 hover:bg-amber-300 text-indigo-950 font-black px-5 py-3 rounded-xl shadow-lg transition flex items-center space-x-2 text-sm">
+        <i data-lucide="qr-code" class="w-5 h-5"></i>
+        <span>Take Attendance (My Subjects)</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+      <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+        <i data-lucide="users" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Enrolled Students</p>
+        <p class="text-2xl font-black text-slate-900">{{ students|length }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+      <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+        <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Faculty / Teachers</p>
+        <p class="text-2xl font-black text-slate-900">{{ teachers|length }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+      <div class="w-12 h-12 bg-sky-50 text-sky-600 rounded-xl flex items-center justify-center">
+        <i data-lucide="book-open" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Active Subjects</p>
+        <p class="text-2xl font-black text-slate-900">{{ subjects|length }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+      <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+        <i data-lucide="smartphone" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase">Bound Devices</p>
+        <p class="text-2xl font-black text-slate-900">
+          {{ students|selectattr('bound_device_id')|list|length }} / {{ students|length }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Management Tabs -->
+  <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+    
+    <!-- Tab Nav -->
+    <div class="flex border-b border-slate-200 px-6 pt-4 bg-slate-50/50 space-x-8">
+      <button onclick="switchTab('tab-teachers')" id="btn-tab-teachers" class="tab-btn pb-4 font-bold text-sm border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2">
+        <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+        <span>Manage Teachers</span>
+      </button>
+      <button onclick="switchTab('tab-students')" id="btn-tab-students" class="tab-btn pb-4 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2">
+        <i data-lucide="users" class="w-4 h-4"></i>
+        <span>Manage Students (Device Security)</span>
+      </button>
+      <button onclick="switchTab('tab-subjects')" id="btn-tab-subjects" class="tab-btn pb-4 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2">
+        <i data-lucide="book" class="w-4 h-4"></i>
+        <span>Subjects & Assignments</span>
+      </button>
+    </div>
+
+    <!-- 1. TEACHERS MANAGEMENT -->
+    <div id="tab-teachers" class="tab-pane p-6 space-y-6">
+      
+      <!-- Add Teacher Form -->
+      <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center space-x-2">
+          <i data-lucide="user-plus" class="w-4 h-4 text-indigo-600"></i>
+          <span>Add New Teacher / Faculty Member</span>
+        </h3>
+        <form action="/api/class-teacher/add-teacher" method="POST" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Full Name</label>
+            <input type="text" name="full_name" required placeholder="e.g. Prof. H. S. Rao" 
+                   class="w-full mt-1 p-2 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Username</label>
+            <input type="text" name="username" required placeholder="e.g. prof_rao" 
+                   class="w-full mt-1 p-2 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Password</label>
+            <input type="password" name="password" required placeholder="••••••••" 
+                   class="w-full mt-1 p-2 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-sm shadow transition">
+              + Add Teacher
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Teachers List Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-600">
+          <thead class="bg-slate-100 text-xs uppercase font-bold text-slate-700">
+            <tr>
+              <th class="p-3">Teacher Name</th>
+              <th class="p-3">Username</th>
+              <th class="p-3">Role</th>
+              <th class="p-3">Assigned Subjects</th>
+              <th class="p-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for t in teachers %}
+            <tr class="hover:bg-slate-50 transition">
+              <td class="p-3 font-semibold text-slate-900 flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">
+                  {{ t.full_name[:2] }}
+                </div>
+                <span>{{ t.full_name }}</span>
+              </td>
+              <td class="p-3 font-mono text-xs">{{ t.username }}</td>
+              <td class="p-3">
+                {% if t.role == 'class_teacher' %}
+                  <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-bold">Class Teacher</span>
+                {% else %}
+                  <span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-0.5 rounded-full font-semibold">Teacher</span>
+                {% endif %}
+              </td>
+              <td class="p-3 text-xs text-indigo-700 font-medium">
+                {{ t.assigned_subjects or 'None' }}
+              </td>
+              <td class="p-3 text-right">
+                {% if t.role != 'class_teacher' %}
+                <form action="/api/class-teacher/delete-teacher/{{ t.id }}" method="POST" onsubmit="return confirm('Are you sure you want to remove teacher {{ t.full_name }}?');" class="inline">
+                  <button type="submit" class="text-rose-600 hover:text-rose-800 text-xs font-bold px-2 py-1 rounded hover:bg-rose-50 transition">
+                    Remove
+                  </button>
+                </form>
+                {% else %}
+                <span class="text-xs text-slate-400 italic">Protected</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- 2. STUDENTS MANAGEMENT & DEVICE BINDING -->
+    <div id="tab-students" class="tab-pane hidden p-6 space-y-6">
+      
+      <!-- Add Student Form -->
+      <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center space-x-2">
+          <i data-lucide="user-plus" class="w-4 h-4 text-emerald-600"></i>
+          <span>Enroll New Student (Third Year CSE)</span>
+        </h3>
+        <form action="/api/class-teacher/add-student" method="POST" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Full Name</label>
+            <input type="text" name="full_name" required placeholder="e.g. Vikas Gupta" 
+                   class="w-full mt-1 p-2 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Roll Number</label>
+            <input type="text" name="roll_no" required placeholder="CSE-2023-06" 
+                   class="w-full mt-1 p-2 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Username</label>
+            <input type="text" name="username" required placeholder="student_vikas" 
+                   class="w-full mt-1 p-2 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Password</label>
+            <input type="password" name="password" required placeholder="••••••••" 
+                   class="w-full mt-1 p-2 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-sm shadow transition">
+              + Enroll Student
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Students List Table with Device Security Controls -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-600">
+          <thead class="bg-slate-100 text-xs uppercase font-bold text-slate-700">
+            <tr>
+              <th class="p-3">Roll No</th>
+              <th class="p-3">Student Name</th>
+              <th class="p-3">Username</th>
+              <th class="p-3">Bound Hardware Device ID</th>
+              <th class="p-3">Binding Status</th>
+              <th class="p-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for s in students %}
+            <tr class="hover:bg-slate-50 transition">
+              <td class="p-3 font-mono font-bold text-slate-900 text-xs">{{ s.roll_no }}</td>
+              <td class="p-3 font-semibold text-slate-900">{{ s.full_name }}</td>
+              <td class="p-3 font-mono text-xs">{{ s.username }}</td>
+              <td class="p-3">
+                {% if s.bound_device_id %}
+                  <span class="font-mono text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">
+                    {{ s.bound_device_id }}
+                  </span>
+                {% else %}
+                  <span class="text-xs text-slate-400 italic">Not Bound Yet (Will bind on 1st login)</span>
+                {% endif %}
+              </td>
+              <td class="p-3">
+                {% if s.bound_device_id %}
+                  <span class="bg-emerald-100 text-emerald-800 text-[11px] px-2 py-0.5 rounded-full font-bold">Bound</span>
+                {% else %}
+                  <span class="bg-amber-100 text-amber-800 text-[11px] px-2 py-0.5 rounded-full font-semibold">Pending</span>
+                {% endif %}
+              </td>
+              <td class="p-3 text-right space-x-2">
+                <!-- Reset Device Binding Button -->
+                {% if s.bound_device_id %}
+                <form action="/api/class-teacher/reset-device/{{ s.id }}" method="POST" onsubmit="return confirm('Reset device binding for {{ s.full_name }}? They can then bind a new phone/device.');" class="inline">
+                  <button type="submit" title="Reset Device Binding" class="text-amber-700 hover:text-amber-900 text-xs font-bold px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 transition">
+                    <i data-lucide="refresh-cw" class="w-3 h-3 inline mr-1"></i> Reset Device
+                  </button>
+                </form>
+                {% endif %}
+
+                <!-- Remove Student -->
+                <form action="/api/class-teacher/delete-student/{{ s.id }}" method="POST" onsubmit="return confirm('Remove student {{ s.full_name }} permanently?');" class="inline">
+                  <button type="submit" class="text-rose-600 hover:text-rose-800 text-xs font-bold px-2 py-1 rounded hover:bg-rose-50 transition">
+                    Remove
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- 3. SUBJECTS & ASSIGNMENTS -->
+    <div id="tab-subjects" class="tab-pane hidden p-6 space-y-6">
+      
+      <!-- Add Subject Form -->
+      <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center space-x-2">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-purple-600"></i>
+          <span>Add Course / Subject</span>
+        </h3>
+        <form action="/api/class-teacher/add-subject" method="POST" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Subject Code</label>
+            <input type="text" name="code" required placeholder="e.g. CS304" 
+                   class="w-full mt-1 p-2 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Subject Name</label>
+            <input type="text" name="name" required placeholder="e.g. Software Engineering" 
+                   class="w-full mt-1 p-2 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">Assigned Teacher</label>
+            <select name="teacher_id" class="w-full mt-1 p-2 text-sm border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 bg-white">
+              {% for t in teachers %}
+                <option value="{{ t.id }}">{{ t.full_name }} ({% if t.role == 'class_teacher' %}Class Teacher{% else %}Faculty{% endif %})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm shadow transition">
+              + Add Subject
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Subjects Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-600">
+          <thead class="bg-slate-100 text-xs uppercase font-bold text-slate-700">
+            <tr>
+              <th class="p-3">Code</th>
+              <th class="p-3">Subject Name</th>
+              <th class="p-3">Class</th>
+              <th class="p-3">Assigned Faculty</th>
+              <th class="p-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for s in subjects %}
+            <tr class="hover:bg-slate-50 transition">
+              <td class="p-3 font-mono font-bold text-indigo-700 text-xs">{{ s.code }}</td>
+              <td class="p-3 font-semibold text-slate-900">{{ s.name }}</td>
+              <td class="p-3 text-xs">{{ s.class_name }}</td>
+              <td class="p-3 text-xs font-medium text-slate-800">{{ s.teacher_name or 'Unassigned' }}</td>
+              <td class="p-3 text-right">
+                <form action="/api/class-teacher/delete-subject/{{ s.id }}" method="POST" onsubmit="return confirm('Delete subject {{ s.name }}?');" class="inline">
+                  <button type="submit" class="text-rose-600 hover:text-rose-800 text-xs font-bold px-2 py-1 rounded hover:bg-rose-50 transition">
+                    Delete
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function switchTab(tabId) {
+    // Hide all panes
+    document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.className = "tab-btn pb-4 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2";
+    });
+
+    // Show target
+    document.getElementById(tabId).classList.remove('hidden');
+    const activeBtn = document.getElementById(`btn-${tabId}`);
+    activeBtn.className = "tab-btn pb-4 font-bold text-sm border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2";
+  }
+</script>
+{% endblock %}

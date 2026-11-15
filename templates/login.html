@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In • Dynamic QR Attendance System{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-4">
+  
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    
+    <!-- Left Hero & Explanations -->
+    <div class="lg:col-span-5 space-y-6">
+      <div class="bg-gradient-to-br from-indigo-900 to-indigo-700 text-white p-6 rounded-2xl shadow-xl">
+        <span class="inline-block bg-indigo-500/30 text-indigo-200 text-xs px-3 py-1 rounded-full font-mono mb-3">
+          Final Year Mini-Project
+        </span>
+        <h2 class="text-2xl font-black tracking-tight mb-2">Smart Management & Attendance System</h2>
+        <p class="text-indigo-200 text-sm leading-relaxed mb-6">
+          Advanced dynamic QR verification with device-binding security, role-based controls, and instant attendance reporting.
+        </p>
+
+        <!-- Feature List -->
+        <div class="space-y-3 text-xs text-indigo-100 border-t border-indigo-600/50 pt-4">
+          <div class="flex items-start space-x-2">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5"></i>
+            <span><strong>Designated Class Teacher:</strong> Exclusive single-person admin to manage faculty and students.</span>
+          </div>
+          <div class="flex items-start space-x-2">
+            <i data-lucide="refresh-cw" class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5"></i>
+            <span><strong>Dynamic Rotating QR:</strong> Prevents photos or forwarding across chat apps.</span>
+          </div>
+          <div class="flex items-start space-x-2">
+            <i data-lucide="smartphone" class="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5"></i>
+            <span><strong>1 Student = 1 Device:</strong> Hardware binding blocks proxy attendance from other phones.</span>
+          </div>
+          <div class="flex items-start space-x-2">
+            <i data-lucide="lock" class="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5"></i>
+            <span><strong>Active Session Lock:</strong> Student logout disabled while QR code session is active.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detected Hardware Badge -->
+      <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div class="flex items-center space-x-2 text-slate-700 font-bold text-xs uppercase tracking-wider mb-2">
+          <i data-lucide="cpu" class="w-4 h-4 text-indigo-600"></i>
+          <span>Detected Device Hardware ID</span>
+        </div>
+        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono font-bold text-indigo-900" id="display-dev-id">Detecting...</span>
+            <span class="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full">Active</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1">This hardware fingerprint will bind to your student account upon login.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Login Form & Quick Demos -->
+    <div class="lg:col-span-7">
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-xl p-6 sm:p-8">
+        
+        <div class="mb-6">
+          <h3 class="text-xl font-black text-slate-900">Portal Login</h3>
+          <p class="text-xs text-slate-500 mt-1">Select your role or enter your institutional credentials.</p>
+        </div>
+
+        <!-- Role Selector Tabs -->
+        <div class="flex rounded-xl bg-slate-100 p-1 mb-6">
+          <button type="button" onclick="setRole('class_teacher')" id="tab-class_teacher" 
+                  class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
+            Class Teacher
+          </button>
+          <button type="button" onclick="setRole('teacher')" id="tab-teacher" 
+                  class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
+            Faculty
+          </button>
+          <button type="button" onclick="setRole('student')" id="tab-student" 
+                  class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition">
+            Student
+          </button>
+        </div>
+
+        <form action="/login" method="POST" class="space-y-4">
+          <!-- Hidden device id for binding -->
+          <input type="hidden" name="device_id" id="login-device-id" value="">
+          <input type="hidden" name="selected_role" id="selected-role" value="student">
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" id="username-label">
+              Student Username / Roll No
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                <i data-lucide="user" class="w-4 h-4"></i>
+              </span>
+              <input type="text" name="username" id="username-input" required 
+                     class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                     placeholder="e.g. student_rohit or CSE-2023-01">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Password
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                <i data-lucide="key" class="w-4 h-4"></i>
+              </span>
+              <input type="password" name="password" id="password-input" required 
+                     class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                     placeholder="••••••••">
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">Default demo password: <code class="text-indigo-600 font-mono font-bold">password123</code></p>
+          </div>
+
+          <button type="submit" 
+                  class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2 text-sm">
+            <i data-lucide="log-in" class="w-4 h-4"></i>
+            <span id="btn-submit-text">Sign In as Student</span>
+          </button>
+        </form>
+
+        <!-- Quick 1-Click Demo Accounts -->
+        <div class="mt-8 pt-6 border-t border-slate-100">
+          <p class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 flex items-center">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500 mr-1.5"></i>
+            Quick Test Accounts (Click to Auto-Fill)
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <button type="button" onclick="fillCredentials('classteacher', 'password123', 'class_teacher')" 
+                    class="p-2.5 border border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-900 rounded-xl text-left transition flex items-center space-x-2">
+              <div class="w-7 h-7 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-xs">CT</div>
+              <div>
+                <p class="font-bold">Prof. Sharma</p>
+                <p class="text-[10px] text-indigo-600">Class Teacher (Admin)</p>
+              </div>
+            </button>
+
+            <button type="button" onclick="fillCredentials('prof_verma', 'password123', 'teacher')" 
+                    class="p-2.5 border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-left transition flex items-center space-x-2">
+              <div class="w-7 h-7 bg-slate-700 text-white rounded-lg flex items-center justify-center font-bold text-xs">F1</div>
+              <div>
+                <p class="font-bold">Prof. Verma</p>
+                <p class="text-[10px] text-slate-500">Teacher (DBMS)</p>
+              </div>
+            </button>
+
+            <button type="button" onclick="fillCredentials('student_rohit', 'password123', 'student')" 
+                    class="p-2.5 border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-left transition flex items-center space-x-2">
+              <div class="w-7 h-7 bg-emerald-600 text-white rounded-lg flex items-center justify-center font-bold text-xs">S1</div>
+              <div>
+                <p class="font-bold">Rohit Kumar</p>
+                <p class="text-[10px] text-slate-500">Student • Roll 01</p>
+              </div>
+            </button>
+
+            <button type="button" onclick="fillCredentials('student_priya', 'password123', 'student')" 
+                    class="p-2.5 border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-left transition flex items-center space-x-2">
+              <div class="w-7 h-7 bg-emerald-600 text-white rounded-lg flex items-center justify-center font-bold text-xs">S2</div>
+              <div>
+                <p class="font-bold">Priya Singh</p>
+                <p class="text-[10px] text-slate-500">Student • Roll 02</p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function setRole(role) {
+    document.getElementById('selected-role').value = role;
+    
+    // Tab styles
+    ['class_teacher', 'teacher', 'student'].forEach(r => {
+      const tab = document.getElementById(`tab-${r}`);
+      if (r === role) {
+        tab.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition";
+      } else {
+        tab.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition";
+      }
+    });
+
+    const label = document.getElementById('username-label');
+    const input = document.getElementById('username-input');
+    const btn = document.getElementById('btn-submit-text');
+
+    if (role === 'class_teacher') {
+      label.innerText = 'Class Teacher Username';
+      input.placeholder = 'e.g. classteacher';
+      btn.innerText = 'Sign In as Class Teacher';
+    } else if (role === 'teacher') {
+      label.innerText = 'Faculty Username';
+      input.placeholder = 'e.g. prof_verma';
+      btn.innerText = 'Sign In as Faculty';
+    } else {
+      label.innerText = 'Student Username / Roll No';
+      input.placeholder = 'e.g. student_rohit';
+      btn.innerText = 'Sign In as Student';
+    }
+  }
+
+  function fillCredentials(u, p, role) {
+    setRole(role);
+    document.getElementById('username-input').value = u;
+    document.getElementById('password-input').value = p;
+  }
+
+  // Update display with persistent device id
+  document.addEventListener('DOMContentLoaded', () => {
+    const devId = DeviceBinding.getDeviceId();
+    const displayEl = document.getElementById('display-dev-id');
+    const hiddenEl = document.getElementById('login-device-id');
+    if (displayEl) displayEl.innerText = devId;
+    if (hiddenEl) hiddenEl.value = devId;
+  });
+</script>
+{% endblock %}
