@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Dynamic QR Attendance System • GitHub Pages</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- QRCode.js for in-browser Dynamic QR Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- HTML5-QRCode for In-Browser Camera Scanning -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <link rel="stylesheet" href="static/css/style.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+
+  <!-- Navigation Bar -->
+  <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-40 border-b border-indigo-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        
+        <!-- Logo -->
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('login')">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-md">
+            <i data-lucide="qr-code" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <div class="font-extrabold text-base sm:text-lg tracking-tight text-white flex items-center space-x-2">
+              <span>Smart Attendance</span>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-mono">Live on GitHub</span>
+            </div>
+            <p class="text-[11px] text-indigo-200 hidden sm:block">Third Year CSE • Device-Bound Verification</p>
+          </div>
+        </div>
+
+        <!-- Role Badges & Navigation Actions -->
+        <div class="flex items-center space-x-3">
+          <div id="nav-user-info" class="hidden sm:flex flex-col text-right">
+            <span class="text-xs font-bold text-white" id="nav-user-name">Guest</span>
+            <span class="text-[10px] text-indigo-300 font-mono" id="nav-user-role">Not Signed In</span>
+          </div>
+
+          <!-- Active Navigation Buttons -->
+          <div id="nav-actions" class="flex items-center space-x-2">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Alerts Area -->
+  <div id="alert-container" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full"></div>
+
+  <!-- MAIN APPLICATION SCREENS (SPA) -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ========================================== -->
+    <!-- SCREEN 1: LOGIN PORTAL                     -->
+    <!-- ========================================== -->
+    <div id="screen-login" class="screen-view">
+      <div class="max-w-4xl mx-auto py-2">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          <!-- Left Info Hero -->
+          <div class="lg:col-span-5 space-y-6">
+            <div class="bg-gradient-to-br from-indigo-900 to-indigo-700 text-white p-6 rounded-3xl shadow-xl">
+              <span class="inline-block bg-indigo-500/30 text-indigo-200 text-xs px-3 py-1 rounded-full font-mono mb-3">
+                Final Year Mini-Project
+              </span>
+              <h2 class="text-2xl font-black tracking-tight mb-2">Smart Management & Attendance System</h2>
+              <p class="text-indigo-200 text-xs leading-relaxed mb-6">
+                Dynamic rotating QR code with hardware device-binding (anti-proxy), single Class Teacher admin controls, and real-time attendance reports.
+              </p>
+
+              <div class="space-y-3 text-xs text-indigo-100 border-t border-indigo-600/50 pt-4">
+                <div class="flex items-start space-x-2">
+                  <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5"></i>
+                  <span><strong>Designated Class Teacher:</strong> Only 1 person holds master admin to add/remove teachers & students.</span>
+                </div>
+                <div class="flex items-start space-x-2">
+                  <i data-lucide="refresh-cw" class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5"></i>
+                  <span><strong>Dynamic Rotating QR:</strong> Changes security token every 15 seconds to prevent photo-sharing on WhatsApp.</span>
+                </div>
+                <div class="flex items-start space-x-2">
+                  <i data-lucide="smartphone" class="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5"></i>
+                  <span><strong>1 Student = 1 Device:</strong> Hardware fingerprint locks student to their physical phone.</span>
+                </div>
+                <div class="flex items-start space-x-2">
+                  <i data-lucide="lock" class="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5"></i>
+                  <span><strong>Active Session Lock:</strong> Student logout disabled while QR attendance is active.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detected Device Hardware ID -->
+            <div class="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+              <div class="flex items-center space-x-2 text-slate-700 font-bold text-xs uppercase tracking-wider mb-2">
+                <i data-lucide="cpu" class="w-4 h-4 text-indigo-600"></i>
+                <span>Detected Device Hardware ID</span>
+              </div>
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-mono font-bold text-indigo-900" id="display-dev-id">Detecting...</span>
+                  <span class="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full">Active</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1">This hardware fingerprint will bind to your student account upon login.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Login Box -->
+          <div class="lg:col-span-7">
+            <div class="bg-white border border-slate-200 rounded-3xl shadow-xl p-6 sm:p-8">
+              
+              <div class="mb-6">
+                <h3 class="text-xl font-black text-slate-900">Portal Login</h3>
+                <p class="text-xs text-slate-500 mt-1">Select your role or click any of the 1-click test accounts below.</p>
+              </div>
+
+              <!-- Role Selector Tabs -->
+              <div class="flex rounded-xl bg-slate-100 p-1 mb-6">
+                <button type="button" onclick="setLoginRole('class_teacher')" id="tab-login-class_teacher" 
+                        class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
+                  Class Teacher
+                </button>
+                <button type="button" onclick="setLoginRole('teacher')" id="tab-login-teacher" 
+                        class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
+                  Faculty
+                </button>
+                <button type="button" onclick="setLoginRole('student')" id="tab-login-student" 
+                        class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition">
+                  Student
+                </button>
+              </div>
+
+              <!-- Login Form -->
+              <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" id="login-username-label">
+                    Student Username / Roll No
+                  </label>
+                  <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                      <i data-lucide="user" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="login-username" required 
+                           class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                           placeholder="e.g. student_rohit">
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Password
+                  </label>
+                  <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                      <i data-lucide="key" class="w-4 h-4"></i>
+                    </span>
+                    <input type="password" id="login-password" required 
+                           class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                           placeholder="••••••••">
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-1">Default demo password: <code class="text-indigo-600 font-mono font-bold">password123</code></p>
+                </div>
+
+                <button type="submit" 
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2 text-sm">
+                  <i data-lucide="log-in" class="w-4 h-4"></i>
+                  <span id="login-btn-text">Sign In as Student</span>
+                </button>
+              </form>
+
+              <!-- 1-Click Demo Accounts -->
+              <div class="mt-8 pt-6 border-t border-slate-100">
+                <p class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 flex items-center">
+                  <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500 mr-1.5"></i>
+                  1-Click Test Accounts (Click to Auto-Login)
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <button type="button" onclick="autoLogin('classteacher', 'class_teacher')" 
+                          class="p-2.5 border border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-900 rounded-xl text-left transition flex items-center space-x-2">
+                    <div class="w-7 h-7 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-xs">CT</div>
+                    <div>
+                      <p class="font-bold">Prof. Sharma</p>
+                      <p class="text-[10px] text-indigo-600">Class Teacher (Admin)</p>
+                    </div>
+                  </button>
+
+                  <button type="button" onclick="autoLogin('prof_verma', 'teacher')" 
+                          class="p-2.5 border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-left transition flex items-center space-x-2">
+                    <div class="w-7 h-7 bg-slate-700 text-white rounded-lg flex items-center justify-center font-bold text-xs">F1</div>
+                    <div>
+                      <p class="font-bold">Prof. Verma</p>
+                      <p class="text-[10px] text-slate-500">Teacher (DBMS)</p>
+                    </div>
+                  </button>
+
+                  <button type="button" onclick="autoLogin('student_rohit', 'student')" 
+                          class="p-2.5 border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-left transition flex items-center space-x-2">
+                    <div class="w-7 h-7 bg-emerald-600 text-white rounded-lg flex items-center justify-center font-bold text-xs">S1</div>
+                    <div>
+                      <p class="font-bold">Rohit Kumar</p>
+                      <p class="text-[10px] text-slate-500">Student • Roll 01</p>
+                    </div>
+                  </button>
+
+                  <button type="button" onclick="autoLogin('student_priya', 'student')" 
+                          class="p-2.5 border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-left transition flex items-center space-x-2">
+                    <div class="w-7 h-7 bg-emerald-600 text-white rounded-lg flex items-center justify-center font-bold text-xs">S2</div>
+                    <div>
+                      <p class="font-bold">Priya Singh</p>
+                      <p class="text-[10px] text-slate-500">Student • Roll 02</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 2: CLASS TEACHER ADMIN PANEL        -->
+    <!-- ========================================== -->
+    <div id="screen-class-teacher" class="screen-view hidden space-y-8">
+      
+      <!-- Top Banner -->
+      <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <div class="flex items-center space-x-2 text-amber-300 text-xs font-bold uppercase tracking-wider mb-2">
+            <i data-lucide="crown" class="w-4 h-4"></i>
+            <span>Designated Single Class Teacher (Head Administrator)</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-black" id="ct-full-name">Prof. A. K. Sharma</h1>
+          <p class="text-indigo-200 text-sm mt-1">Class Teacher for: <strong class="text-white">Third Year CSE</strong> (Computer Science & Engineering)</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="navigateTo('teacher')" class="bg-amber-400 hover:bg-amber-300 text-indigo-950 font-black px-5 py-3 rounded-xl shadow-lg transition flex items-center space-x-2 text-sm">
+            <i data-lucide="qr-code" class="w-5 h-5"></i>
+            <span>Take Attendance (My Subjects)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="users" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Enrolled Students</p>
+            <p class="text-2xl font-black text-slate-900" id="ct-stat-students">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Faculty / Teachers</p>
+            <p class="text-2xl font-black text-slate-900" id="ct-stat-teachers">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 bg-sky-50 text-sky-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="book-open" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Active Courses</p>
+            <p class="text-2xl font-black text-slate-900" id="ct-stat-subjects">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="smartphone" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Bound Devices</p>
+            <p class="text-2xl font-black text-slate-900" id="ct-stat-bound">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Management Tabs -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        
+        <div class="flex border-b border-slate-200 px-6 pt-4 bg-slate-50/50 space-x-8">
+          <button onclick="switchAdminTab('tab-admin-teachers')" id="btn-admin-teachers" class="tab-btn pb-4 font-bold text-sm border-b-2 border-indigo-600 text-indigo-600 flex items-center space-x-2">
+            <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+            <span>Manage Teachers</span>
+          </button>
+          <button onclick="switchAdminTab('tab-admin-students')" id="btn-admin-students" class="tab-btn pb-4 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2">
+            <i data-lucide="users" class="w-4 h-4"></i>
+            <span>Manage Students (Device Security)</span>
+          </button>
+          <button onclick="switchAdminTab('tab-admin-subjects')" id="btn-admin-subjects" class="tab-btn pb-4 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2">
+            <i data-lucide="book" class="w-4 h-4"></i>
+            <span>Subjects & Assignments</span>
+          </button>
+        </div>
+
+        <!-- 1. TEACHERS TAB -->
+        <div id="tab-admin-teachers" class="admin-tab-pane p-6 space-y-6">
+          <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center space-x-2">
+              <i data-lucide="user-plus" class="w-4 h-4 text-indigo-600"></i>
+              <span>Add New Teacher / Faculty</span>
+            </h3>
+            <form onsubmit="handleAddTeacher(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <input type="text" id="add-teacher-name" required placeholder="Full Name (e.g. Prof. H. S. Rao)" class="p-2 text-sm border border-slate-300 rounded-lg outline-none">
+              <input type="text" id="add-teacher-user" required placeholder="Username (e.g. prof_rao)" class="p-2 text-sm border border-slate-300 rounded-lg outline-none">
+              <input type="password" id="add-teacher-pass" required placeholder="Password" class="p-2 text-sm border border-slate-300 rounded-lg outline-none">
+              <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg text-sm shadow transition">
+                + Add Teacher
+              </button>
+            </form>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600">
+              <thead class="bg-slate-100 text-xs uppercase font-bold text-slate-700">
+                <tr>
+                  <th class="p-3">Faculty Name</th>
+                  <th class="p-3">Username</th>
+                  <th class="p-3">Role</th>
+                  <th class="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ct-teachers-table-body" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 2. STUDENTS TAB -->
+        <div id="tab-admin-students" class="admin-tab-pane hidden p-6 space-y-6">
+          <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center space-x-2">
+              <i data-lucide="user-plus" class="w-4 h-4 text-emerald-600"></i>
+              <span>Enroll New Student (Third Year CSE)</span>
+            </h3>
+            <form onsubmit="handleAddStudent(event)" class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+              <input type="text" id="add-student-name" required placeholder="Student Name" class="p-2 text-sm border border-slate-300 rounded-lg outline-none">
+              <input type="text" id="add-student-roll" required placeholder="Roll (CSE-2023-06)" class="p-2 text-sm border border-slate-300 rounded-lg outline-none">
+              <input type="text" id="add-student-user" required placeholder="Username" class="p-2 text-sm border border-slate-300 rounded-lg outline-none">
+              <input type="password" id="add-student-pass" required placeholder="Password" class="p-2 text-sm border border-slate-300 rounded-lg outline-none">
+              <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-sm shadow transition">
+                + Enroll Student
+              </button>
+            </form>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600">
+              <thead class="bg-slate-100 text-xs uppercase font-bold text-slate-700">
+                <tr>
+                  <th class="p-3">Roll No</th>
+                  <th class="p-3">Student Name</th>
+                  <th class="p-3">Username</th>
+                  <th class="p-3">Hardware Device ID</th>
+                  <th class="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ct-students-table-body" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. SUBJECTS TAB -->
+        <div id="tab-admin-subjects" class="admin-tab-pane hidden p-6 space-y-6">
+          <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center space-x-2">
+              <i data-lucide="plus-circle" class="w-4 h-4 text-purple-600"></i>
+              <span>Add Course / Subject</span>
+            </h3>
+            <form onsubmit="handleAddSubject(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <input type="text" id="add-sub-code" required placeholder="Code (e.g. CS304)" class="p-2 text-sm border border-slate-300 rounded-lg outline-none">
+              <input type="text" id="add-sub-name" required placeholder="Name (e.g. Software Engg)" class="p-2 text-sm border border-slate-300 rounded-lg outline-none">
+              <select id="add-sub-teacher" class="p-2 text-sm border border-slate-300 rounded-lg bg-white outline-none"></select>
+              <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm shadow transition">
+                + Add Subject
+              </button>
+            </form>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600">
+              <thead class="bg-slate-100 text-xs uppercase font-bold text-slate-700">
+                <tr>
+                  <th class="p-3">Code</th>
+                  <th class="p-3">Subject Name</th>
+                  <th class="p-3">Assigned Faculty</th>
+                  <th class="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ct-subjects-table-body" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 3: TEACHER DYNAMIC QR PORTAL        -->
+    <!-- ========================================== -->
+    <div id="screen-teacher" class="screen-view hidden space-y-8">
+      
+      <!-- Top Hero -->
+      <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <div class="flex items-center space-x-2 text-indigo-300 text-xs font-bold uppercase tracking-wider mb-2">
+            <i data-lucide="radio" class="w-4 h-4 text-emerald-400 animate-pulse"></i>
+            <span>Dynamic QR Attendance Engine</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-black" id="teacher-full-name">Faculty Member</h1>
+          <p class="text-slate-300 text-sm mt-1">Class: <strong class="text-white">Third Year CSE</strong> • Select subject to launch dynamic QR session.</p>
+        </div>
+
+        <div class="flex items-center space-x-2 bg-indigo-900/60 border border-indigo-700 px-4 py-2 rounded-xl">
+          <span class="w-3 h-3 bg-slate-400 rounded-full" id="teacher-status-dot"></span>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-200" id="teacher-status-text">No Active Session</span>
+        </div>
+      </div>
+
+      <!-- FORM: START ATTENDANCE -->
+      <div id="teacher-start-box" class="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 sm:p-8">
+        <div class="max-w-2xl">
+          <h2 class="text-lg font-black text-slate-900 flex items-center space-x-2">
+            <i data-lucide="play-circle" class="w-5 h-5 text-indigo-600"></i>
+            <span>Launch Dynamic Attendance Session</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-1 mb-6">
+            Generate an expiring, dynamic rotating QR code. Set the duration after which the session automatically closes.
+          </p>
+
+          <form onsubmit="handleStartSessionSubmit(event)" class="space-y-5">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Select Course / Subject
+              </label>
+              <select id="session-subject-select" required class="w-full p-3 text-sm bg-slate-50 border border-slate-300 rounded-xl outline-none font-medium"></select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                QR Active Validity Duration
+              </label>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+                <button type="button" onclick="setTimerSecs(30)" class="dur-btn py-2 px-3 text-xs font-bold border border-slate-200 rounded-xl hover:border-indigo-500 hover:text-indigo-600 transition">30 Seconds</button>
+                <button type="button" onclick="setTimerSecs(60)" class="dur-btn py-2 px-3 text-xs font-bold border border-indigo-600 bg-indigo-50 text-indigo-700 rounded-xl transition">60 Seconds</button>
+                <button type="button" onclick="setTimerSecs(120)" class="dur-btn py-2 px-3 text-xs font-bold border border-slate-200 rounded-xl hover:border-indigo-500 hover:text-indigo-600 transition">2 Minutes</button>
+                <button type="button" onclick="setTimerSecs(300)" class="dur-btn py-2 px-3 text-xs font-bold border border-slate-200 rounded-xl hover:border-indigo-500 hover:text-indigo-600 transition">5 Minutes</button>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs text-slate-500">Custom Duration:</span>
+                <input type="number" id="custom-session-secs" min="10" max="1800" value="60" class="w-24 p-1.5 text-xs border border-slate-300 rounded-lg outline-none font-mono">
+                <span class="text-xs text-slate-500">seconds</span>
+              </div>
+            </div>
+
+            <div class="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-xl flex items-start space-x-3 text-xs text-indigo-900">
+              <i data-lucide="shield-alert" class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5"></i>
+              <div>
+                <strong class="font-bold">Anti-Proxy Security Rules Active:</strong>
+                <p class="mt-0.5 text-indigo-700">QR code rotates security tokens every 15 seconds. Photos sent over WhatsApp will expire immediately. Student logouts are automatically disabled during this session.</p>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-8 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-sm">
+              <i data-lucide="qr-code" class="w-5 h-5"></i>
+              <span>Generate Dynamic QR & Start Attendance</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ACTIVE QR STAGE -->
+      <div id="teacher-active-stage" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          <!-- Big Dynamic QR Screen -->
+          <div class="lg:col-span-7 bg-white border-2 border-indigo-500 rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col items-center text-center">
+            <div class="w-full flex items-center justify-between pb-4 border-b border-slate-100">
+              <div class="text-left">
+                <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Live Lecture Session</span>
+                <h3 class="text-lg font-black text-slate-900" id="live-subject-heading">Operating System</h3>
+                <p class="text-xs text-slate-500">Third Year CSE</p>
+              </div>
+              <div class="text-right">
+                <span class="text-[11px] font-bold text-slate-400 uppercase">Time Remaining</span>
+                <div id="timer-box" class="timer-badge">
+                  <span id="timer-text">00:00</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="my-6 flex flex-col items-center">
+              <div class="qr-container active p-4 rounded-2xl bg-white shadow-inner">
+                <div id="qrcode-canvas-wrapper" class="w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center"></div>
+              </div>
+              <div class="mt-4 flex items-center space-x-2 text-xs font-medium text-slate-600">
+                <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
+                <span>QR rotating security token updates every 15s</span>
+              </div>
+              <div class="mt-3 bg-slate-100 px-4 py-1.5 rounded-lg border border-slate-200">
+                <span class="text-xs text-slate-500">Class Backup Token: </span>
+                <strong class="font-mono text-sm text-indigo-700 tracking-wider" id="backup-code-display">------</strong>
+              </div>
+            </div>
+
+            <div class="w-full pt-4 border-t border-slate-100 flex items-center justify-between">
+              <p class="text-xs text-slate-500">Students scan using their verified bound device.</p>
+              <button onclick="endSessionEarly()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition shadow flex items-center space-x-1.5">
+                <i data-lucide="stop-circle" class="w-4 h-4"></i>
+                <span>End Attendance Now</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Scanned Feed -->
+          <div class="lg:col-span-5 bg-white border border-slate-200 rounded-3xl shadow-sm p-6 sm:p-8 flex flex-col h-full">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+                  <i data-lucide="users" class="w-4 h-4 text-emerald-600"></i>
+                  <span>Live Attendance Feed</span>
+                </h3>
+                <p class="text-xs text-slate-500">Students scanning in real-time</p>
+              </div>
+              <div class="text-right">
+                <span class="text-2xl font-black text-indigo-600" id="live-scan-count">0</span>
+                <span class="text-xs text-slate-400">/ <span id="live-total-enrolled">5</span></span>
+              </div>
+            </div>
+            <div id="live-scan-list" class="flex-grow overflow-y-auto max-h-[360px] space-y-2 pr-1"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SESSION REPORT -->
+      <div id="teacher-report-box" class="hidden bg-white border border-slate-200 rounded-3xl shadow-xl p-6 sm:p-8 space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+          <div>
+            <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+              Session Completed
+            </span>
+            <h2 class="text-2xl font-black text-slate-900 mt-2" id="report-title">Operating System • Attendance Report</h2>
+            <p class="text-xs text-slate-500 mt-0.5" id="report-meta">Conducted on Third Year CSE</p>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="window.print()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center space-x-1.5 shadow-sm">
+              <i data-lucide="printer" class="w-4 h-4"></i>
+              <span>Print Report</span>
+            </button>
+            <button onclick="downloadCSVReport()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center space-x-1.5 shadow-sm">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Export CSV</span>
+            </button>
+            <button onclick="resetTeacherSession()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center space-x-1.5 shadow-sm">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>New Session</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 my-6">
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <p class="text-[11px] font-bold text-slate-500 uppercase">Total Enrolled</p>
+            <p class="text-2xl font-black text-slate-900" id="rep-total">0</p>
+          </div>
+          <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
+            <p class="text-[11px] font-bold text-emerald-700 uppercase">Present Count</p>
+            <p class="text-2xl font-black text-emerald-800" id="rep-present">0</p>
+          </div>
+          <div class="bg-rose-50 p-4 rounded-2xl border border-rose-200">
+            <p class="text-[11px] font-bold text-rose-700 uppercase">Absent Count</p>
+            <p class="text-2xl font-black text-rose-800" id="rep-absent">0</p>
+          </div>
+          <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-200">
+            <p class="text-[11px] font-bold text-indigo-700 uppercase">Attendance Rate</p>
+            <p class="text-2xl font-black text-indigo-800" id="rep-pct">0%</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-100 text-xs uppercase font-bold text-slate-700">
+              <tr>
+                <th class="p-3">Roll Number</th>
+                <th class="p-3">Student Name</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">Scan Timestamp</th>
+                <th class="p-3">Verified Device ID</th>
+              </tr>
+            </thead>
+            <tbody id="report-table-body" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 4: STUDENT PORTAL (THIRD YEAR CSE)  -->
+    <!-- ========================================== -->
+    <div id="screen-student" class="screen-view hidden space-y-8">
+      
+      <!-- Top Card -->
+      <div class="bg-gradient-to-r from-indigo-900 to-purple-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <div class="flex items-center space-x-2 text-indigo-300 text-xs font-bold uppercase tracking-wider mb-2">
+            <i data-lucide="graduation-cap" class="w-4 h-4 text-emerald-400"></i>
+            <span>Student Portal • Verified Device</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-black" id="student-full-name">Rohit Kumar</h1>
+          <p class="text-indigo-200 text-sm mt-1">
+            Roll No: <strong class="text-white font-mono" id="student-roll-no">CSE-2023-01</strong> • Class: <strong class="text-white">Third Year CSE</strong> (Computer Science & Engineering)
+          </p>
+        </div>
+
+        <div class="bg-indigo-950/70 border border-indigo-700/80 p-4 rounded-2xl flex items-center space-x-3.5">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600/50 flex items-center justify-center text-emerald-400">
+            <i data-lucide="smartphone-charging" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <p class="text-[11px] uppercase font-bold text-indigo-300">Account Bound Hardware Device</p>
+            <p class="text-xs font-mono font-bold text-white tracking-wider" id="student-bound-dev">DEV-DETECTING...</p>
+            <span class="inline-block text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-semibold mt-1">
+              ✓ 1-Device Lock Enforced
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVE ATTENDANCE BANNER -->
+      <div id="student-active-banner" class="hidden bg-gradient-to-r from-amber-500 to-rose-500 text-white p-6 rounded-3xl shadow-2xl border-2 border-amber-300 animate-fade-in">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-white text-rose-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow">
+              <i data-lucide="qr-code" class="w-7 h-7 animate-bounce"></i>
+            </div>
+            <div>
+              <span class="text-xs font-black uppercase tracking-wider bg-black/20 px-2.5 py-0.5 rounded-full">
+                ● ATTENDANCE IN PROGRESS
+              </span>
+              <h3 class="text-xl font-black mt-1" id="student-active-sub">Operating System (CS301)</h3>
+              <p class="text-xs text-amber-100">Teacher has initiated attendance. Scan the dynamic QR code displayed on the screen now!</p>
+            </div>
+          </div>
+          <button onclick="openStudentScanner()" class="bg-white hover:bg-slate-100 text-rose-700 font-black px-6 py-3 rounded-xl shadow-lg transition flex items-center space-x-2 text-sm">
+            <i data-lucide="camera" class="w-5 h-5"></i>
+            <span>Open QR Scanner</span>
+          </button>
+        </div>
+        <div class="mt-4 pt-3 border-t border-white/20 text-xs text-amber-100 flex items-center space-x-2">
+          <i data-lucide="lock" class="w-4 h-4 text-white"></i>
+          <span><strong>Security Lock Notice:</strong> Logout is disabled on your device while this QR attendance is active to prevent proxy attendance.</span>
+        </div>
+      </div>
+
+      <!-- Student Courses & Summary -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <div class="lg:col-span-7 bg-white border border-slate-200 rounded-3xl shadow-sm p-6 sm:p-8">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="text-lg font-black text-slate-900 flex items-center space-x-2">
+                <i data-lucide="book-open" class="w-5 h-5 text-indigo-600"></i>
+                <span>Enrolled Courses & Subjects</span>
+              </h3>
+              <p class="text-xs text-slate-500 mt-1">Class: <strong class="text-slate-800">Third Year CSE</strong></p>
+            </div>
+            <span class="text-xs font-bold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full">3 Subjects</span>
+          </div>
+
+          <div class="space-y-3" id="student-subjects-list"></div>
+        </div>
+
+        <div class="lg:col-span-5 bg-white border border-slate-200 rounded-3xl shadow-sm p-6 sm:p-8 space-y-6">
+          <div>
+            <h3 class="text-lg font-black text-slate-900 flex items-center space-x-2">
+              <i data-lucide="activity" class="w-5 h-5 text-emerald-600"></i>
+              <span>My Attendance Record</span>
+            </h3>
+            <p class="text-xs text-slate-500 mt-1">Verified scans recorded on this device</p>
+          </div>
+
+          <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-2xl border border-indigo-100 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold text-indigo-900 uppercase tracking-wider">Overall Attendance</p>
+              <p class="text-3xl font-black text-indigo-700 mt-1" id="student-stat-pct">100%</p>
+              <p class="text-[11px] text-slate-500 mt-1" id="student-stat-subtext">Active student record</p>
+            </div>
+            <div class="w-16 h-16 rounded-full border-4 border-indigo-500 flex items-center justify-center font-bold text-sm text-indigo-700 bg-white shadow-sm" id="student-circle-pct">
+              100%
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Recent Verified Scans</h4>
+            <div class="space-y-2" id="student-recent-scans"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- SCANNER MODAL -->
+  <div id="scanner-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+      <div class="card-header-gradient flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="scan" class="w-5 h-5 text-white"></i>
+          <h3 class="font-black text-white text-base">Scan Teacher's Dynamic QR Code</h3>
+        </div>
+        <button onclick="closeStudentScanner()" class="text-white/80 hover:text-white transition">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div class="relative bg-black rounded-2xl overflow-hidden shadow-inner flex flex-col items-center justify-center min-h-[260px]">
+          <div id="html5-qr-reader" class="w-full"></div>
+          <div id="scanner-status-msg" class="text-center p-6 text-white text-xs">
+            <i data-lucide="camera" class="w-8 h-8 mx-auto text-indigo-400 mb-2 animate-pulse"></i>
+            <span>Starting camera viewfinder...</span>
+          </div>
+        </div>
+
+        <div id="student-scan-feedback"></div>
+
+        <div class="pt-2 border-t border-slate-200">
+          <span class="text-xs text-slate-500">Camera permission denied? Enter class backup code:</span>
+          <div class="flex items-center space-x-2 mt-2">
+            <input type="text" id="manual-code-val" maxlength="12" placeholder="e.g. 6-digit code" class="w-full p-2.5 text-sm border border-slate-300 rounded-xl outline-none font-mono">
+            <button onclick="submitManualCode()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow transition">
+              Verify
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex items-center justify-between">
+        <span class="text-[11px] text-slate-500">Device ID: <code class="font-mono text-indigo-700" id="modal-device-id">...</code></span>
+        <button onclick="closeStudentScanner()" class="text-xs font-bold text-slate-600 hover:text-slate-900">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-slate-500 text-xs no-print mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-2">
+        <span class="font-bold text-slate-700">Management System Project</span>
+        <span>•</span>
+        <span class="text-slate-500">Department of Computer Science & Engineering</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span class="inline-flex items-center text-xs text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full font-mono">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 mr-1"></i> Anti-Proxy Device Lock
+        </span>
+        <span>Deployed on GitHub</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- App Logic Script -->
+  <script src="static/js/device.js"></script>
+  <script src="static/js/app-standalone.js"></script>
+</body>
+</html>
