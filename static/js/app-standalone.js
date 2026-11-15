@@ -37,10 +37,21 @@ const Store = {
     }
     const parsed = JSON.parse(data);
     // Ensure exclusive single class teacher email is set
-    const ct = parsed.teachers.find(t => t.role === 'class_teacher');
-    if (ct) {
-      ct.email = "prasadmhankraj21@gmail.com";
-      ct.name = "Prof. Prasad (Class Teacher)";
+    if (parsed.teachers) {
+      const ct = parsed.teachers.find(t => t.role === 'class_teacher');
+      if (ct) {
+        ct.email = "prasadmhankraj21@gmail.com";
+        ct.name = "Prof. Prasad (Class Teacher)";
+      }
+    }
+    // Ensure subjects are always populated and never empty
+    if (!parsed.subjects || parsed.subjects.length === 0) {
+      parsed.subjects = [
+        { id: 1, code: "CS301", name: "Operating System", teacherId: 1 },
+        { id: 2, code: "CS302", name: "Database Management Systems", teacherId: 2 },
+        { id: 3, code: "CS303", name: "Computer Networks", teacherId: 3 }
+      ];
+      localStorage.setItem('attendance_sys_data', JSON.stringify(parsed));
     }
     return parsed;
   },
@@ -48,6 +59,7 @@ const Store = {
     localStorage.setItem('attendance_sys_data', JSON.stringify(data));
   }
 };
+
 
 
 let currentUser = null;
@@ -83,9 +95,18 @@ function navigateTo(screenId) {
   const target = document.getElementById(`screen-${screenId}`);
   if (target) target.classList.remove('hidden');
 
+  if (screenId === 'teacher') {
+    renderTeacherView();
+  } else if (screenId === 'class-teacher') {
+    renderClassTeacherView();
+  } else if (screenId === 'student') {
+    renderStudentView();
+  }
+
   updateNavbar();
   lucide.createIcons();
 }
+
 
 function updateNavbar() {
   const navActions = document.getElementById('nav-actions');
@@ -515,12 +536,22 @@ function removeSubject(id) {
 // -------------------------------------------------------------------
 function renderTeacherView() {
   const store = Store.get();
-  document.getElementById('teacher-full-name').innerText = currentUser.name;
+  if (currentUser) {
+    const nameEl = document.getElementById('teacher-full-name');
+    if (nameEl) nameEl.innerText = currentUser.name;
+  }
 
   const select = document.getElementById('session-subject-select');
-  select.innerHTML = store.subjects.map(s => `
-    <option value="${s.id}">${s.code} - ${s.name} (Third Year CSE)</option>
-  `).join('');
+  if (select) {
+    const subjects = (store.subjects && store.subjects.length > 0) ? store.subjects : [
+      { id: 1, code: "CS301", name: "Operating System", teacherId: 1 },
+      { id: 2, code: "CS302", name: "Database Management Systems", teacherId: 2 },
+      { id: 3, code: "CS303", name: "Computer Networks", teacherId: 3 }
+    ];
+    select.innerHTML = subjects.map(s => `
+      <option value="${s.id}">${s.code} - ${s.name} (Third Year CSE)</option>
+    `).join('');
+  }
 
   if (store.activeSession) {
     showActiveQrStage();
@@ -530,6 +561,7 @@ function renderTeacherView() {
     document.getElementById('teacher-report-box').classList.add('hidden');
   }
 }
+
 
 function setTimerSecs(secs) {
   document.getElementById('custom-session-secs').value = secs;
@@ -542,9 +574,13 @@ function setTimerSecs(secs) {
 function handleStartSessionSubmit(event) {
   event.preventDefault();
   const store = Store.get();
-  const subjectId = parseInt(document.getElementById('session-subject-select').value, 10);
+  const selectEl = document.getElementById('session-subject-select');
+  const subjectId = selectEl ? parseInt(selectEl.value, 10) : 1;
   const duration = parseInt(document.getElementById('custom-session-secs').value, 10) || 60;
-  const subject = store.subjects.find(s => s.id === subjectId);
+  
+  const subject = (store.subjects && store.subjects.find(s => s.id === subjectId)) 
+               || (store.subjects && store.subjects[0]) 
+               || { id: 1, name: "Operating System", code: "CS301" };
 
   const sessionId = Date.now();
   sessionSecondsRemaining = duration;
@@ -554,7 +590,7 @@ function handleStartSessionSubmit(event) {
     subjectId: subject.id,
     subjectName: subject.name,
     subjectCode: subject.code,
-    teacherName: currentUser.name,
+    teacherName: currentUser ? currentUser.name : "Faculty Member",
     duration: duration,
     startedAt: new Date().toLocaleTimeString(),
     salt: Math.random().toString(36).substring(2, 8).toUpperCase(),
@@ -565,6 +601,7 @@ function handleStartSessionSubmit(event) {
   showActiveQrStage();
   showAlert("Dynamic QR Attendance Session Started!", "success");
 }
+
 
 function showActiveQrStage() {
   const store = Store.get();
@@ -988,5 +1025,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize Store if needed
   Store.get();
+  renderTeacherView();
   navigateTo('login');
+
 });

@@ -307,8 +307,12 @@ def teacher_dashboard():
         subjects = db.get_all_subjects()
     else:
         subjects = db.get_subjects_for_teacher(teacher_id)
+        # If no specific subjects assigned, fallback to all class subjects so teacher can take attendance
+        if not subjects:
+            subjects = db.get_all_subjects()
 
     return render_template('teacher.html', subjects=subjects)
+
 
 @app.route('/api/session/start', methods=['POST'])
 def start_session():
