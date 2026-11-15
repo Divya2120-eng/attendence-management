@@ -51,16 +51,30 @@ def login():
             flash("Please enter both username and password.", "danger")
             return render_template('login.html')
 
-        user = db.get_user_by_username(username)
+        # Lookup user by either email or username
+        user = db.get_user_by_email_or_username(username)
         if not user:
-            flash("Invalid credentials. User not found.", "danger")
+            flash("Invalid credentials. Account not found.", "danger")
             return render_template('login.html')
+
+        # --- EXCLUSIVE SINGLE CLASS TEACHER EMAIL CONSTRAINT ---
+        if selected_role == 'class_teacher' or user['role'] == 'class_teacher':
+            valid_admin_identifiers = [
+                Config.CLASS_TEACHER_EMAIL.lower(),
+                Config.CLASS_TEACHER_BACKUP_EMAIL.lower(),
+                'classteacher'
+            ]
+            entered_id = username.lower()
+            if entered_id not in valid_admin_identifiers or user['role'] != 'class_teacher':
+                flash(f"ACCESS DENIED: Class Teacher login is restricted to ONLY ONE single authorized email ({Config.CLASS_TEACHER_EMAIL}).", "danger")
+                return render_template('login.html')
 
         # Check password hash
         from werkzeug.security import check_password_hash
         if not check_password_hash(user['password_hash'], password):
             flash("Incorrect password. Please try again.", "danger")
             return render_template('login.html')
+
 
         # --- DEVICE BINDING SECURITY FOR STUDENTS ---
         if user['role'] == 'student':

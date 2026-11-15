@@ -189,7 +189,13 @@ class Database:
             conn.commit()
 
         self._seed_default_data(conn, cursor)
+        # Ensure single Class Teacher has designated authorized email
+        param = "%s" if self.use_mysql else "?"
+        cursor.execute(f"UPDATE users SET email = {param} WHERE role = 'class_teacher'", (Config.CLASS_TEACHER_EMAIL,))
+        if not self.use_mysql:
+            conn.commit()
         conn.close()
+
 
     def _seed_default_data(self, conn, cursor):
         cursor.execute("SELECT COUNT(*) as count FROM users")
@@ -207,8 +213,9 @@ class Database:
             cursor.execute(f"""
             INSERT INTO users (username, password_hash, full_name, email, role, class_id)
             VALUES ({param}, {param}, {param}, {param}, {param}, {param})
-            """, ('classteacher', default_pwd, 'Prof. A. K. Sharma (Class Teacher)', 'sharma@college.edu', 'class_teacher', class_id))
+            """, ('classteacher', default_pwd, 'Prof. Prasad (Class Teacher)', Config.CLASS_TEACHER_EMAIL, 'class_teacher', class_id))
             ct_id = cursor.lastrowid
+
 
             teachers = [
                 ('prof_verma', default_pwd, 'Prof. R. Verma', 'verma@college.edu', 'teacher', class_id),
@@ -289,7 +296,24 @@ class Database:
     # ------------------ High Level Helper Methods ------------------
 
     # --- User Management ---
+    def get_user_by_email_or_username(self, identifier):
+        return self.query("""
+            SELECT u.*, c.name as class_name, c.branch, c.year 
+            FROM users u 
+            LEFT JOIN classes c ON u.class_id = c.id 
+            WHERE u.email = %s OR u.username = %s
+        """, (identifier, identifier), one=True)
+
+    def get_class_teacher(self):
+        return self.query("""
+            SELECT u.*, c.name as class_name, c.branch, c.year 
+            FROM users u 
+            LEFT JOIN classes c ON u.class_id = c.id 
+            WHERE u.role = 'class_teacher'
+        """, one=True)
+
     def get_user_by_username(self, username):
+
         return self.query("""
             SELECT u.*, c.name as class_name, c.branch, c.year 
             FROM users u 

@@ -216,12 +216,12 @@
             Quick Test Accounts (Click to Auto-Fill)
           </p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            <button type="button" onclick="fillCredentials('classteacher', 'password123', 'class_teacher')" 
+            <button type="button" onclick="fillCredentials('prasadmhankraj21@gmail.com', 'password123', 'class_teacher')" 
                     class="p-2.5 border border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-900 rounded-xl text-left transition flex items-center space-x-2">
               <div class="w-7 h-7 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-xs">CT</div>
               <div>
-                <p class="font-bold">Prof. Sharma</p>
-                <p class="text-[10px] text-indigo-600">Class Teacher (Admin)</p>
+                <p class="font-bold">Prof. Prasad</p>
+                <p class="text-[10px] text-indigo-600 font-mono">prasadmhankraj21@gmail.com</p>
               </div>
             </button>
 
@@ -314,8 +314,8 @@
     const btn = document.getElementById('btn-submit-text');
 
     if (role === 'class_teacher') {
-      label.innerText = 'Class Teacher Username';
-      input.placeholder = 'e.g. classteacher';
+      label.innerText = 'Authorized Class Teacher Email (Single Master Account)';
+      input.placeholder = 'prasadmhankraj21@gmail.com';
       btn.innerText = 'Sign In as Class Teacher';
     } else if (role === 'teacher') {
       label.innerText = 'Faculty Username';
@@ -326,6 +326,7 @@
       input.placeholder = 'e.g. student_rohit';
       btn.innerText = 'Sign In as Student';
     }
+
   }
 
   function fillCredentials(u, p, role) {

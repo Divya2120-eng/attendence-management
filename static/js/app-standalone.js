@@ -6,10 +6,11 @@
 // Initial Seed Data (Third Year CSE)
 const defaultData = {
   teachers: [
-    { id: 1, name: "Prof. A. K. Sharma (Class Teacher)", username: "classteacher", role: "class_teacher" },
+    { id: 1, name: "Prof. Prasad (Class Teacher)", username: "classteacher", email: "prasadmhankraj21@gmail.com", role: "class_teacher" },
     { id: 2, name: "Prof. R. Verma", username: "prof_verma", role: "teacher" },
     { id: 3, name: "Prof. S. Gupta", username: "prof_gupta", role: "teacher" }
   ],
+
   students: [
     { id: 1, name: "Rohit Kumar", roll: "CSE-2023-01", username: "student_rohit", deviceId: null },
     { id: 2, name: "Priya Singh", roll: "CSE-2023-02", username: "student_priya", deviceId: null },
@@ -34,12 +35,20 @@ const Store = {
       localStorage.setItem('attendance_sys_data', JSON.stringify(defaultData));
       return defaultData;
     }
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    // Ensure exclusive single class teacher email is set
+    const ct = parsed.teachers.find(t => t.role === 'class_teacher');
+    if (ct) {
+      ct.email = "prasadmhankraj21@gmail.com";
+      ct.name = "Prof. Prasad (Class Teacher)";
+    }
+    return parsed;
   },
   save: function(data) {
     localStorage.setItem('attendance_sys_data', JSON.stringify(data));
   }
 };
+
 
 let currentUser = null;
 let currentRole = 'student';
@@ -240,8 +249,8 @@ function setLoginRole(role) {
   const input = document.getElementById('login-username');
 
   if (role === 'class_teacher') {
-    label.innerText = 'Class Teacher Username';
-    input.placeholder = 'classteacher';
+    label.innerText = 'Authorized Class Teacher Email (Single Master Account)';
+    input.placeholder = 'prasadmhankraj21@gmail.com';
     btn.innerText = 'Sign In as Class Teacher';
   } else if (role === 'teacher') {
     label.innerText = 'Faculty Username';
@@ -303,9 +312,14 @@ function executeLogin(username, role) {
     navigateTo('student');
 
   } else if (role === 'class_teacher') {
-    const ct = store.teachers.find(t => t.role === 'class_teacher' && t.username === username);
+    const validEmails = ["prasadmhankraj21@gmail.com", "classteacher@college.edu", "classteacher"];
+    if (!validEmails.includes(username.toLowerCase())) {
+      showAlert("ACCESS DENIED: Class Teacher login is strictly restricted to single authorized email (prasadmhankraj21@gmail.com).", "danger");
+      return;
+    }
+    const ct = store.teachers.find(t => t.role === 'class_teacher');
     if (!ct) {
-      showAlert("Invalid Class Teacher credentials. Use 'classteacher'.", "danger");
+      showAlert("Class Teacher master account not found.", "danger");
       return;
     }
     currentUser = ct;
@@ -313,6 +327,7 @@ function executeLogin(username, role) {
     navigateTo('class-teacher');
 
   } else {
+
     const teacher = store.teachers.find(t => t.username === username);
     if (!teacher) {
       showAlert("Faculty user not found. Try 'prof_verma'.", "danger");
