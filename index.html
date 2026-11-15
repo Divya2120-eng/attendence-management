@@ -132,59 +132,143 @@
                 <p class="text-xs text-slate-500 mt-1">Select your role or click any of the 1-click test accounts below.</p>
               </div>
 
-              <!-- Role Selector Tabs -->
+              <!-- Mode Switcher: Sign In vs Create Account -->
               <div class="flex rounded-xl bg-slate-100 p-1 mb-6">
-                <button type="button" onclick="setLoginRole('class_teacher')" id="tab-login-class_teacher" 
-                        class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
-                  Class Teacher
-                </button>
-                <button type="button" onclick="setLoginRole('teacher')" id="tab-login-teacher" 
-                        class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
-                  Faculty
-                </button>
-                <button type="button" onclick="setLoginRole('student')" id="tab-login-student" 
+                <button type="button" onclick="switchStandaloneAuthMode('login')" id="btn-sa-login" 
                         class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition">
-                  Student
+                  Sign In (Login)
+                </button>
+                <button type="button" onclick="switchStandaloneAuthMode('register')" id="btn-sa-register" 
+                        class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
+                  Create Account (Sign Up)
                 </button>
               </div>
 
-              <!-- Login Form -->
-              <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" id="login-username-label">
-                    Student Username / Roll No
-                  </label>
-                  <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                      <i data-lucide="user" class="w-4 h-4"></i>
-                    </span>
-                    <input type="text" id="login-username" required 
-                           class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                           placeholder="e.g. student_rohit">
-                  </div>
+              <!-- 1. LOGIN BOX -->
+              <div id="sa-login-container">
+                <!-- Role Selector Tabs -->
+                <div class="flex rounded-xl bg-slate-50 border border-slate-200 p-1 mb-4">
+                  <button type="button" onclick="setLoginRole('class_teacher')" id="tab-login-class_teacher" 
+                          class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
+                    Class Teacher
+                  </button>
+                  <button type="button" onclick="setLoginRole('teacher')" id="tab-login-teacher" 
+                          class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
+                    Faculty
+                  </button>
+                  <button type="button" onclick="setLoginRole('student')" id="tab-login-student" 
+                          class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition">
+                    Student
+                  </button>
                 </div>
 
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Password
-                  </label>
-                  <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                      <i data-lucide="key" class="w-4 h-4"></i>
-                    </span>
-                    <input type="password" id="login-password" required 
-                           class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                           placeholder="••••••••">
+                <!-- Login Form -->
+                <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" id="login-username-label">
+                      Student Username / Roll No
+                    </label>
+                    <div class="relative">
+                      <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                      </span>
+                      <input type="text" id="login-username" required 
+                             class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                             placeholder="e.g. student_rohit">
+                    </div>
                   </div>
-                  <p class="text-[11px] text-slate-400 mt-1">Default demo password: <code class="text-indigo-600 font-mono font-bold">password123</code></p>
-                </div>
 
-                <button type="submit" 
-                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2 text-sm">
-                  <i data-lucide="log-in" class="w-4 h-4"></i>
-                  <span id="login-btn-text">Sign In as Student</span>
-                </button>
-              </form>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Password
+                    </label>
+                    <div class="relative">
+                      <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                        <i data-lucide="key" class="w-4 h-4"></i>
+                      </span>
+                      <input type="password" id="login-password" required 
+                             class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                             placeholder="••••••••">
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">Default demo password: <code class="text-indigo-600 font-mono font-bold">password123</code></p>
+                  </div>
+
+                  <button type="submit" 
+                          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2 text-sm">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span id="login-btn-text">Sign In as Student</span>
+                  </button>
+                </form>
+
+                <div class="text-center mt-4">
+                  <button type="button" onclick="switchStandaloneAuthMode('register')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline">
+                    Don't have an account? Create Account (Register)
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. CREATE ACCOUNT (REGISTRATION BOX) -->
+              <div id="sa-register-container" class="hidden">
+                <form onsubmit="handleStandaloneRegister(event)" class="space-y-4">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Registering as:
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                      <label class="border border-slate-300 rounded-xl p-2.5 flex items-center space-x-2 cursor-pointer hover:border-indigo-500">
+                        <input type="radio" name="sa_reg_role" value="student" checked onchange="toggleSaRegRole('student')">
+                        <span class="text-xs font-bold text-slate-800">Student</span>
+                      </label>
+                      <label class="border border-slate-300 rounded-xl p-2.5 flex items-center space-x-2 cursor-pointer hover:border-indigo-500">
+                        <input type="radio" name="sa_reg_role" value="teacher" onchange="toggleSaRegRole('teacher')">
+                        <span class="text-xs font-bold text-slate-800">Faculty</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name</label>
+                    <input type="text" id="sa-reg-name" required placeholder="e.g. Vikas Gupta" 
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                  </div>
+
+                  <div id="sa-reg-roll-box">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Roll Number</label>
+                    <input type="text" id="sa-reg-roll" required placeholder="e.g. CSE-2023-06" 
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-mono">
+                    <p class="text-[10px] text-slate-400 mt-0.5">Enrolled into: Third Year CSE</p>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Username</label>
+                    <input type="text" id="sa-reg-username" required placeholder="e.g. vikas_gupta" 
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-mono">
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Password</label>
+                    <input type="password" id="sa-reg-password" required placeholder="••••••••" 
+                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                  </div>
+
+                  <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-900 flex items-center space-x-2">
+                    <i data-lucide="smartphone" class="w-4 h-4 text-indigo-600 flex-shrink-0"></i>
+                    <span>Your detected device ID will automatically bind to this new account.</span>
+                  </div>
+
+                  <button type="submit" 
+                          class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-sm">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>Create Account Now</span>
+                  </button>
+                </form>
+
+                <div class="text-center mt-4">
+                  <button type="button" onclick="switchStandaloneAuthMode('login')" class="text-xs font-semibold text-slate-600 hover:text-slate-900 underline">
+                    Already have an account? Sign In
+                  </button>
+                </div>
+              </div>
 
               <!-- 1-Click Demo Accounts -->
               <div class="mt-8 pt-6 border-t border-slate-100">

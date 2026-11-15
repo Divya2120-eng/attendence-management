@@ -125,6 +125,102 @@ function updateNavbar() {
   }
 }
 
+// Auth Mode Switcher (Login vs Register)
+function switchStandaloneAuthMode(mode) {
+  const loginBox = document.getElementById('sa-login-container');
+  const registerBox = document.getElementById('sa-register-container');
+  const btnLogin = document.getElementById('btn-sa-login');
+  const btnReg = document.getElementById('btn-sa-register');
+
+  if (mode === 'register') {
+    loginBox.classList.add('hidden');
+    registerBox.classList.remove('hidden');
+    btnReg.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition";
+    btnLogin.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition";
+  } else {
+    registerBox.classList.add('hidden');
+    loginBox.classList.remove('hidden');
+    btnLogin.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition";
+    btnReg.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition";
+  }
+  lucide.createIcons();
+}
+
+function toggleSaRegRole(role) {
+  const rollBox = document.getElementById('sa-reg-roll-box');
+  const rollInput = document.getElementById('sa-reg-roll');
+  if (role === 'teacher') {
+    rollBox.classList.add('hidden');
+    rollInput.required = false;
+  } else {
+    rollBox.classList.remove('hidden');
+    rollInput.required = true;
+  }
+}
+
+function handleStandaloneRegister(event) {
+  event.preventDefault();
+  const store = Store.get();
+  const devId = DeviceBinding.getDeviceId();
+
+  const role = document.querySelector('input[name="sa_reg_role"]:checked').value;
+  const name = document.getElementById('sa-reg-name').value.trim();
+  const username = document.getElementById('sa-reg-username').value.trim();
+  const password = document.getElementById('sa-reg-password').value.trim();
+
+  if (role === 'student') {
+    const roll = document.getElementById('sa-reg-roll').value.trim();
+
+    // Check duplicate username or roll
+    if (store.students.some(s => s.username === username || s.roll.toLowerCase() === roll.toLowerCase())) {
+      showAlert("Username or Roll Number already registered! Please use another.", "danger");
+      return;
+    }
+
+    // Check duplicate device
+    const existingDev = store.students.find(s => s.deviceId === devId);
+    if (existingDev) {
+      showAlert(`SECURITY ALERT: This physical device is already bound to student '${existingDev.name}'. One device cannot be shared by multiple students.`, "danger");
+      return;
+    }
+
+    const newStudent = {
+      id: Date.now(),
+      name,
+      roll,
+      username,
+      deviceId: devId
+    };
+    store.students.push(newStudent);
+    Store.save(store);
+
+    showAlert(`Student account created for ${name} (${roll})! Device bound. Welcome!`, "success");
+    currentUser = { ...newStudent, role: 'student' };
+    renderStudentView();
+    navigateTo('student');
+
+  } else {
+    if (store.teachers.some(t => t.username === username)) {
+      showAlert("Username already taken by another teacher.", "danger");
+      return;
+    }
+
+    const newTeacher = {
+      id: Date.now(),
+      name,
+      username,
+      role: 'teacher'
+    };
+    store.teachers.push(newTeacher);
+    Store.save(store);
+
+    showAlert(`Faculty account created for ${name}! Welcome!`, "success");
+    currentUser = newTeacher;
+    renderTeacherView();
+    navigateTo('teacher');
+  }
+}
+
 // -------------------------------------------------------------------
 // LOGIN LOGIC & DEVICE BINDING
 // -------------------------------------------------------------------

@@ -64,62 +64,150 @@
           <p class="text-xs text-slate-500 mt-1">Select your role or enter your institutional credentials.</p>
         </div>
 
-        <!-- Role Selector Tabs -->
+        <!-- Toggle between Login & Register -->
         <div class="flex rounded-xl bg-slate-100 p-1 mb-6">
-          <button type="button" onclick="setRole('class_teacher')" id="tab-class_teacher" 
-                  class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
-            Class Teacher
-          </button>
-          <button type="button" onclick="setRole('teacher')" id="tab-teacher" 
-                  class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
-            Faculty
-          </button>
-          <button type="button" onclick="setRole('student')" id="tab-student" 
+          <button type="button" onclick="switchFormMode('login')" id="btn-mode-login" 
                   class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition">
-            Student
+            Sign In (Login)
+          </button>
+          <button type="button" onclick="switchFormMode('register')" id="btn-mode-register" 
+                  class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
+            Create New Account (Sign Up)
           </button>
         </div>
 
-        <form action="/login" method="POST" class="space-y-4">
-          <!-- Hidden device id for binding -->
-          <input type="hidden" name="device_id" id="login-device-id" value="">
-          <input type="hidden" name="selected_role" id="selected-role" value="student">
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" id="username-label">
-              Student Username / Roll No
-            </label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                <i data-lucide="user" class="w-4 h-4"></i>
-              </span>
-              <input type="text" name="username" id="username-input" required 
-                     class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                     placeholder="e.g. student_rohit or CSE-2023-01">
-            </div>
+        <!-- 1. LOGIN FORM -->
+        <div id="form-login-box">
+          <!-- Role Selector Tabs -->
+          <div class="flex rounded-xl bg-slate-50 border border-slate-200 p-1 mb-4">
+            <button type="button" onclick="setRole('class_teacher')" id="tab-class_teacher" 
+                    class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
+              Class Teacher
+            </button>
+            <button type="button" onclick="setRole('teacher')" id="tab-teacher" 
+                    class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
+              Faculty
+            </button>
+            <button type="button" onclick="setRole('student')" id="tab-student" 
+                    class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition">
+              Student
+            </button>
           </div>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Password
-            </label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                <i data-lucide="key" class="w-4 h-4"></i>
-              </span>
-              <input type="password" name="password" id="password-input" required 
-                     class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                     placeholder="••••••••">
-            </div>
-            <p class="text-[11px] text-slate-400 mt-1">Default demo password: <code class="text-indigo-600 font-mono font-bold">password123</code></p>
-          </div>
+          <form action="/login" method="POST" class="space-y-4">
+            <!-- Hidden device id for binding -->
+            <input type="hidden" name="device_id" class="login-device-id" value="">
+            <input type="hidden" name="selected_role" id="selected-role" value="student">
 
-          <button type="submit" 
-                  class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2 text-sm">
-            <i data-lucide="log-in" class="w-4 h-4"></i>
-            <span id="btn-submit-text">Sign In as Student</span>
-          </button>
-        </form>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1" id="username-label">
+                Student Username / Roll No
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                  <i data-lucide="user" class="w-4 h-4"></i>
+                </span>
+                <input type="text" name="username" id="username-input" required 
+                       class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                       placeholder="e.g. student_rohit or CSE-2023-01">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Password
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                  <i data-lucide="key" class="w-4 h-4"></i>
+                </span>
+                <input type="password" name="password" id="password-input" required 
+                       class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                       placeholder="••••••••">
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">Default demo password: <code class="text-indigo-600 font-mono font-bold">password123</code></p>
+            </div>
+
+            <button type="submit" 
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2 text-sm">
+              <i data-lucide="log-in" class="w-4 h-4"></i>
+              <span id="btn-submit-text">Sign In as Student</span>
+            </button>
+          </form>
+
+          <!-- Don't have account prompt -->
+          <div class="text-center mt-4">
+            <button type="button" onclick="switchFormMode('register')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline">
+              Don't have an account? Click here to Create Account (Register)
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. REGISTRATION FORM (CREATE ACCOUNT) -->
+        <div id="form-register-box" class="hidden">
+          <form action="/register" method="POST" class="space-y-4">
+            <input type="hidden" name="device_id" class="login-device-id" value="">
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                I am registering as:
+              </label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="border border-slate-300 rounded-xl p-2.5 flex items-center space-x-2 cursor-pointer hover:border-indigo-500">
+                  <input type="radio" name="reg_role" value="student" checked onchange="toggleRegFields('student')">
+                  <span class="text-xs font-bold text-slate-800">Student</span>
+                </label>
+                <label class="border border-slate-300 rounded-xl p-2.5 flex items-center space-x-2 cursor-pointer hover:border-indigo-500">
+                  <input type="radio" name="reg_role" value="teacher" onchange="toggleRegFields('teacher')">
+                  <span class="text-xs font-bold text-slate-800">Teacher / Faculty</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name</label>
+              <input type="text" name="reg_fullname" required placeholder="e.g. Vikas Gupta" 
+                     class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <div id="reg-roll-box">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Roll Number (Student)</label>
+              <input type="text" name="reg_roll_no" id="reg-roll-input" required placeholder="e.g. CSE-2023-06" 
+                     class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-mono">
+              <p class="text-[10px] text-slate-400 mt-0.5">Enrolled into: Third Year CSE</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Username</label>
+              <input type="text" name="reg_username" required placeholder="e.g. vikas_gupta" 
+                     class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Create Password</label>
+              <input type="password" name="reg_password" required placeholder="••••••••" 
+                     class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-900 flex items-center space-x-2">
+              <i data-lucide="smartphone" class="w-4 h-4 text-indigo-600 flex-shrink-0"></i>
+              <span>Your physical device hardware fingerprint will bind to this new account automatically.</span>
+            </div>
+
+            <button type="submit" 
+                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-sm">
+              <i data-lucide="user-plus" class="w-4 h-4"></i>
+              <span>Create Account Now</span>
+            </button>
+          </form>
+
+          <div class="text-center mt-4">
+            <button type="button" onclick="switchFormMode('login')" class="text-xs font-semibold text-slate-600 hover:text-slate-900 underline">
+              Already have an account? Sign In here
+            </button>
+          </div>
+        </div>
+
 
         <!-- Quick 1-Click Demo Accounts -->
         <div class="mt-8 pt-6 border-t border-slate-100">
@@ -176,6 +264,38 @@
 
 {% block scripts %}
 <script>
+  function switchFormMode(mode) {
+    const loginBox = document.getElementById('form-login-box');
+    const registerBox = document.getElementById('form-register-box');
+    const btnLogin = document.getElementById('btn-mode-login');
+    const btnReg = document.getElementById('btn-mode-register');
+
+    if (mode === 'register') {
+      loginBox.classList.add('hidden');
+      registerBox.classList.remove('hidden');
+      btnReg.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition";
+      btnLogin.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition";
+    } else {
+      registerBox.classList.add('hidden');
+      loginBox.classList.remove('hidden');
+      btnLogin.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition";
+      btnReg.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition";
+    }
+    lucide.createIcons();
+  }
+
+  function toggleRegFields(role) {
+    const rollBox = document.getElementById('reg-roll-box');
+    const rollInput = document.getElementById('reg-roll-input');
+    if (role === 'teacher') {
+      rollBox.classList.add('hidden');
+      rollInput.required = false;
+    } else {
+      rollBox.classList.remove('hidden');
+      rollInput.required = true;
+    }
+  }
+
   function setRole(role) {
     document.getElementById('selected-role').value = role;
     
@@ -183,9 +303,9 @@
     ['class_teacher', 'teacher', 'student'].forEach(r => {
       const tab = document.getElementById(`tab-${r}`);
       if (r === role) {
-        tab.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition";
+        tab.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition";
       } else {
-        tab.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition";
+        tab.className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition";
       }
     });
 
@@ -209,6 +329,7 @@
   }
 
   function fillCredentials(u, p, role) {
+    switchFormMode('login');
     setRole(role);
     document.getElementById('username-input').value = u;
     document.getElementById('password-input').value = p;
@@ -218,9 +339,10 @@
   document.addEventListener('DOMContentLoaded', () => {
     const devId = DeviceBinding.getDeviceId();
     const displayEl = document.getElementById('display-dev-id');
-    const hiddenEl = document.getElementById('login-device-id');
+    const hiddenEls = document.querySelectorAll('.login-device-id');
     if (displayEl) displayEl.innerText = devId;
-    if (hiddenEl) hiddenEl.value = devId;
+    hiddenEls.forEach(el => el.value = devId);
   });
 </script>
+
 {% endblock %}
