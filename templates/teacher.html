@@ -85,9 +85,10 @@
           <i data-lucide="shield-alert" class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5"></i>
           <div>
             <strong class="font-bold">Anti-Proxy Security Rules Active:</strong>
-            <p class="mt-0.5 text-indigo-700">QR code rotates cryptographic tokens every 15 seconds. Photos sent over WhatsApp will expire immediately. Student logouts are automatically disabled during this session.</p>
+            <p class="mt-0.5 text-indigo-700">QR code rotates cryptographic tokens every 2-3 seconds. Photos sent over WhatsApp will expire immediately. Student logouts are automatically disabled during this session.</p>
           </div>
         </div>
+
 
         <button type="submit" 
                 class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-8 rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center space-x-2 text-sm">
@@ -133,8 +134,9 @@
           
           <div class="mt-4 flex items-center space-x-2 text-xs font-medium text-slate-600">
             <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
-            <span>QR rotating security token updates every 15s</span>
+            <span>QR rotating security token updates every 2-3s</span>
           </div>
+
           
           <!-- Manual 6-Digit Backup Code (Useful if camera lens is damaged) -->
           <div class="mt-3 bg-slate-100 px-4 py-1.5 rounded-lg border border-slate-200">
@@ -317,8 +319,9 @@
         // Start Timer
         startCountdown();
 
-        // Refresh QR token periodically every 15 seconds
-        qrRefreshInterval = setInterval(refreshDynamicQr, 15000);
+        // Refresh QR token periodically every 2.5 seconds (2-3s ultra-fast rotation)
+        qrRefreshInterval = setInterval(refreshDynamicQr, 2500);
+
 
         // Poll live scanned students every 2.5 seconds
         livePollInterval = setInterval(pollLiveStatus, 2500);

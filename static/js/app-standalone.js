@@ -621,7 +621,7 @@ function showActiveQrStage() {
 
   updateDynamicQr();
   clearInterval(qrInterval);
-  qrInterval = setInterval(updateDynamicQr, 15000); // Rotate QR token every 15s
+  qrInterval = setInterval(updateDynamicQr, 2500); // Rotate dynamic QR token every 2.5s (2-3 seconds)
 
   startTimer();
   updateLiveFeed();
@@ -631,25 +631,30 @@ function updateDynamicQr() {
   const store = Store.get();
   if (!store.activeSession) return;
 
-  const timeWindow = Math.floor(Date.now() / 15000);
+  // Window rotates every 2.5 seconds (2-3s ultra-fast anti-screenshot rotation)
+  const timeWindow = Math.floor(Date.now() / 2500);
   const token = `QR-${store.activeSession.id}-${timeWindow}-${store.activeSession.salt}`;
   store.activeSession.currentToken = token;
   Store.save(store);
 
   // Render in-browser QR
   const qrContainer = document.getElementById('qrcode-canvas-wrapper');
-  qrContainer.innerHTML = '';
-  new QRCode(qrContainer, {
-    text: token,
-    width: 256,
-    height: 256,
-    colorDark: "#1e1b4b",
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.M
-  });
+  if (qrContainer) {
+    qrContainer.innerHTML = '';
+    new QRCode(qrContainer, {
+      text: token,
+      width: 256,
+      height: 256,
+      colorDark: "#1e1b4b",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }
 
-  document.getElementById('backup-code-display').innerText = token.slice(-6);
+  const backupEl = document.getElementById('backup-code-display');
+  if (backupEl) backupEl.innerText = token.slice(-6);
 }
+
 
 function startTimer() {
   clearInterval(countdownInterval);
@@ -951,21 +956,24 @@ function verifyAndRecordAttendance(scannedToken) {
     return;
   }
 
-  // Check token match
-  const timeWindow = Math.floor(Date.now() / 15000);
+  // Check token match (2.5s window with 2-frame tolerance for camera shutter lag)
+  const timeWindow = Math.floor(Date.now() / 2500);
   const validTokens = [
     sess.currentToken,
     `QR-${sess.id}-${timeWindow}-${sess.salt}`,
     `QR-${sess.id}-${timeWindow - 1}-${sess.salt}`,
+    `QR-${sess.id}-${timeWindow - 2}-${sess.salt}`,
+    `QR-${sess.id}-${timeWindow + 1}-${sess.salt}`,
     sess.salt,
     sess.salt.slice(-6)
   ];
 
   const isValid = validTokens.includes(scannedToken) || scannedToken.endsWith(sess.salt.slice(-6));
   if (!isValid) {
-    showAlert("QR Code expired or invalid! Dynamic QR code updates every 15 seconds. Please scan current QR on screen.", "danger");
+    showAlert("QR Code expired or invalid! Dynamic QR code updates every 2-3 seconds. Please scan the current live QR on screen.", "danger");
     return;
   }
+
 
   // Check if already scanned
   const already = sess.records.find(r => r.studentId === currentUser.id);

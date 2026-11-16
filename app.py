@@ -356,10 +356,11 @@ def get_session_qr(session_id):
         db.close_session(session_id)
         return jsonify({'is_active': False, 'message': 'Session expired'})
 
-    # Generate a dynamic rotating token (changes every 15 seconds)
-    # Token structure: ATT-[SESSION_ID]-[TIMESTAMP_WINDOW]-[SALT]
-    time_window = int(time.time() // 15)
+    # Generate a dynamic rotating token (changes every 2-3 seconds)
+    # Token structure: QR-[SESSION_ID]-[TIMESTAMP_WINDOW]-[SALT]
+    time_window = int(time.time() // 3)
     dynamic_token = f"QR-{sess['id']}-{time_window}-{sess['session_token'][:6]}"
+
 
     # Generate QR Code image in memory
     qr = qrcode.QRCode(
@@ -534,14 +535,12 @@ def mark_attendance():
             'error': 'No active attendance session found for your class or the session has expired.'
         }), 400
 
-    # 3. Dynamic Token Verification
-    # Expected token formats:
-    # Full QR: QR-[SESSION_ID]-[TIME_WINDOW]-[SALT]
-    # Suffix or manual 6-digit code: sess['session_token'][-6:] or token string
-    time_window = int(time.time() // 15)
+    # 3. Dynamic Token Verification (2-3s window with 2-frame tolerance)
+    time_window = int(time.time() // 3)
     valid_window_tokens = [
         f"QR-{sess['id']}-{time_window}-{sess['session_token'][:6]}",
-        f"QR-{sess['id']}-{time_window - 1}-{sess['session_token'][:6]}", # Accept previous 15s window to avoid edge cases
+        f"QR-{sess['id']}-{time_window - 1}-{sess['session_token'][:6]}", # Accept previous 2-3s frame
+        f"QR-{sess['id']}-{time_window - 2}-{sess['session_token'][:6]}",
         f"QR-{sess['id']}-{time_window + 1}-{sess['session_token'][:6]}",
         sess['session_token'],
         sess['session_token'][-6:].upper()
@@ -551,8 +550,9 @@ def mark_attendance():
     if not is_token_valid:
         return jsonify({
             'success': False, 
-            'error': 'QR Code has expired or is invalid! Dynamic QR rotates every 15 seconds. Please scan the current QR code on the screen.'
+            'error': 'QR Code has expired or is invalid! Dynamic QR rotates every 2-3 seconds. Please scan the current QR code on the screen.'
         }), 400
+
 
     # 4. Mark attendance in database
     ok, msg = db.record_attendance(sess['id'], student_id, device_id)
