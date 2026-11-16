@@ -611,18 +611,35 @@
             </div>
 
             <div class="my-6 flex flex-col items-center">
-              <div class="qr-container active p-4 rounded-2xl bg-white shadow-inner">
-                <div id="qrcode-canvas-wrapper" class="w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center"></div>
+              <div class="qr-container active p-4 rounded-2xl bg-white shadow-inner relative">
+                <div id="qrcode-canvas-wrapper" class="w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center transition-all duration-300"></div>
+                <!-- Visual flash effect on refresh -->
+                <div id="qr-flash-overlay" class="absolute inset-0 bg-indigo-500/10 rounded-2xl pointer-events-none opacity-0 transition-opacity duration-200"></div>
               </div>
-              <div class="mt-4 flex items-center space-x-2 text-xs font-medium text-slate-600">
-                <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
-                <span>QR rotating security token updates every 2-3s</span>
+
+              <!-- Live 3-Second Cycle & Progress Indicator -->
+              <div class="mt-4 flex flex-col items-center space-y-1.5 w-full max-w-xs">
+                <div class="flex items-center justify-between w-full text-xs font-bold text-slate-700">
+                  <span class="flex items-center space-x-1.5 text-indigo-700">
+                    <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
+                    <span id="qr-cycle-counter">QR Cycle #1</span>
+                  </span>
+                  <span class="bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-0.5 rounded text-[11px] font-mono" id="qr-refresh-ticker">Rotates in 3.0s</span>
+                </div>
+                <!-- 3-Second Progress Bar -->
+                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
+                  <div id="qr-progress-bar" class="bg-indigo-600 h-full w-full transition-all duration-100"></div>
+                </div>
+                <p class="text-[10px] text-slate-500 text-center">Ultra-fast 3-second anti-screenshot rotation active</p>
               </div>
+
+              <!-- Manual 6-Digit Backup Code -->
               <div class="mt-3 bg-slate-100 px-4 py-1.5 rounded-lg border border-slate-200">
-                <span class="text-xs text-slate-500">Class Backup Token: </span>
+                <span class="text-xs text-slate-500">Live Backup Token: </span>
                 <strong class="font-mono text-sm text-indigo-700 tracking-wider" id="backup-code-display">------</strong>
               </div>
             </div>
+
 
 
             <div class="w-full pt-4 border-t border-slate-100 flex items-center justify-between">

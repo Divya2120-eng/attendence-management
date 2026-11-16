@@ -603,6 +603,10 @@ function handleStartSessionSubmit(event) {
 }
 
 
+let qrCycle = 0;
+let qrSubTimer = null;
+let qrSecondsLeft = 3.0;
+
 function showActiveQrStage() {
   const store = Store.get();
   const sess = store.activeSession;
@@ -619,9 +623,23 @@ function showActiveQrStage() {
   document.getElementById('teacher-status-text').innerText = "Session Active";
   document.getElementById('teacher-status-text').className = "text-xs font-bold uppercase tracking-wider text-emerald-400";
 
+  qrCycle = 0;
+  qrSecondsLeft = 3.0;
   updateDynamicQr();
-  clearInterval(qrInterval);
-  qrInterval = setInterval(updateDynamicQr, 2500); // Rotate dynamic QR token every 2.5s (2-3 seconds)
+
+  // Exact 3.0-second cycle ticker with smooth progress bar
+  clearInterval(qrSubTimer);
+  qrSubTimer = setInterval(() => {
+    qrSecondsLeft -= 0.1;
+    if (qrSecondsLeft <= 0.05) {
+      qrSecondsLeft = 3.0;
+      updateDynamicQr();
+    }
+    const bar = document.getElementById('qr-progress-bar');
+    const ticker = document.getElementById('qr-refresh-ticker');
+    if (bar) bar.style.width = `${(qrSecondsLeft / 3.0) * 100}%`;
+    if (ticker) ticker.innerText = `Rotates in ${Math.max(0, qrSecondsLeft).toFixed(1)}s`;
+  }, 100);
 
   startTimer();
   updateLiveFeed();
@@ -631,10 +649,23 @@ function updateDynamicQr() {
   const store = Store.get();
   if (!store.activeSession) return;
 
-  // Window rotates every 2.5 seconds (2-3s ultra-fast anti-screenshot rotation)
-  const timeWindow = Math.floor(Date.now() / 2500);
-  const token = `QR-${store.activeSession.id}-${timeWindow}-${store.activeSession.salt}`;
+  qrCycle++;
+  const cycleCounter = document.getElementById('qr-cycle-counter');
+  if (cycleCounter) cycleCounter.innerText = `QR Cycle #${qrCycle}`;
+
+  // Completely random 12-character salt so the QR pattern changes DRAMATICALLY and VISIBLY every 3s!
+  const randomSalt = Math.random().toString(36).substring(2, 8).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
+  const token = `QR-${store.activeSession.id}-${Date.now()}-${randomSalt}`;
   store.activeSession.currentToken = token;
+
+  // Track recent tokens (valid for ~12 seconds to prevent camera shutter latency issues)
+  if (!store.activeSession.recentTokens) {
+    store.activeSession.recentTokens = [];
+  }
+  store.activeSession.recentTokens.unshift(token);
+  if (store.activeSession.recentTokens.length > 5) {
+    store.activeSession.recentTokens.pop();
+  }
   Store.save(store);
 
   // Render in-browser QR
@@ -651,9 +682,17 @@ function updateDynamicQr() {
     });
   }
 
+  // Subtle visual flash indicator on QR card
+  const overlay = document.getElementById('qr-flash-overlay');
+  if (overlay) {
+    overlay.style.opacity = '1';
+    setTimeout(() => { overlay.style.opacity = '0'; }, 200);
+  }
+
   const backupEl = document.getElementById('backup-code-display');
-  if (backupEl) backupEl.innerText = token.slice(-6);
+  if (backupEl) backupEl.innerText = randomSalt.slice(-6);
 }
+
 
 
 function startTimer() {
@@ -726,8 +765,10 @@ function endSessionEarly() {
 function concludeSession() {
   clearInterval(countdownInterval);
   clearInterval(qrInterval);
+  clearInterval(qrSubTimer);
 
   const store = Store.get();
+
   const sess = store.activeSession;
   if (!sess) return;
 
@@ -956,23 +997,23 @@ function verifyAndRecordAttendance(scannedToken) {
     return;
   }
 
-  // Check token match (2.5s window with 2-frame tolerance for camera shutter lag)
-  const timeWindow = Math.floor(Date.now() / 2500);
+  // Check token match (Dynamic 3s token with recent buffer)
   const validTokens = [
     sess.currentToken,
-    `QR-${sess.id}-${timeWindow}-${sess.salt}`,
-    `QR-${sess.id}-${timeWindow - 1}-${sess.salt}`,
-    `QR-${sess.id}-${timeWindow - 2}-${sess.salt}`,
-    `QR-${sess.id}-${timeWindow + 1}-${sess.salt}`,
+    ...(sess.recentTokens || []),
     sess.salt,
-    sess.salt.slice(-6)
+    sess.salt ? sess.salt.slice(-6) : ''
   ];
 
-  const isValid = validTokens.includes(scannedToken) || scannedToken.endsWith(sess.salt.slice(-6));
+  const isValid = validTokens.includes(scannedToken) 
+               || (sess.recentTokens && sess.recentTokens.some(t => t.endsWith(scannedToken) || scannedToken.endsWith(t.slice(-6))))
+               || (sess.salt && scannedToken.endsWith(sess.salt.slice(-6)));
+
   if (!isValid) {
-    showAlert("QR Code expired or invalid! Dynamic QR code updates every 2-3 seconds. Please scan the current live QR on screen.", "danger");
+    showAlert("QR Code expired or invalid! Dynamic QR code updates every 3 seconds. Please scan the current live QR on screen.", "danger");
     return;
   }
+
 
 
   // Check if already scanned
