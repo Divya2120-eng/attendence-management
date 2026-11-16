@@ -6,17 +6,17 @@
 // Initial Seed Data (Third Year CSE)
 const defaultData = {
   teachers: [
-    { id: 1, name: "Prof. Prasad (Class Teacher)", username: "classteacher", email: "prasadmhankraj21@gmail.com", role: "class_teacher" },
-    { id: 2, name: "Prof. R. Verma", username: "prof_verma", role: "teacher" },
-    { id: 3, name: "Prof. S. Gupta", username: "prof_gupta", role: "teacher" }
+    { id: 1, name: "Class Teacher (Admin)", username: "admin1955", password: "1955", role: "class_teacher" },
+    { id: 2, name: "Prof. R. Verma", username: "prof_verma", password: "password123", role: "teacher" },
+    { id: 3, name: "Prof. S. Gupta", username: "prof_gupta", password: "password123", role: "teacher" }
   ],
 
   students: [
-    { id: 1, name: "Rohit Kumar", roll: "CSE-2023-01", username: "student_rohit", deviceId: null },
-    { id: 2, name: "Priya Singh", roll: "CSE-2023-02", username: "student_priya", deviceId: null },
-    { id: 3, name: "Amit Patel", roll: "CSE-2023-03", username: "student_amit", deviceId: null },
-    { id: 4, name: "Neha Sharma", roll: "CSE-2023-04", username: "student_neha", deviceId: null },
-    { id: 5, name: "Rahul Verma", roll: "CSE-2023-05", username: "student_rahul", deviceId: null }
+    { id: 1, name: "Rohit Kumar", roll: "CSE-2023-01", username: "student_rohit", password: "password123", deviceId: null },
+    { id: 2, name: "Priya Singh", roll: "CSE-2023-02", username: "student_priya", password: "password123", deviceId: null },
+    { id: 3, name: "Amit Patel", roll: "CSE-2023-03", username: "student_amit", password: "password123", deviceId: null },
+    { id: 4, name: "Neha Sharma", roll: "CSE-2023-04", username: "student_neha", password: "password123", deviceId: null },
+    { id: 5, name: "Rahul Verma", roll: "CSE-2023-05", username: "student_rahul", password: "password123", deviceId: null }
   ],
   subjects: [
     { id: 1, code: "CS301", name: "Operating System", teacherId: 1 },
@@ -36,13 +36,24 @@ const Store = {
       return defaultData;
     }
     const parsed = JSON.parse(data);
-    // Ensure exclusive single class teacher email is set
+    // Ensure exclusive single class teacher credentials: admin1955 / 1955
     if (parsed.teachers) {
       const ct = parsed.teachers.find(t => t.role === 'class_teacher');
       if (ct) {
-        ct.email = "prasadmhankraj21@gmail.com";
-        ct.name = "Prof. Prasad (Class Teacher)";
+        ct.name = "Class Teacher (Admin)";
+        ct.username = "admin1955";
+        ct.password = "1955";
+      } else {
+        parsed.teachers.unshift({ id: 1, name: "Class Teacher (Admin)", username: "admin1955", password: "1955", role: "class_teacher" });
       }
+      parsed.teachers.forEach(t => {
+        if (!t.password) t.password = "password123";
+      });
+    }
+    if (parsed.students) {
+      parsed.students.forEach(s => {
+        if (!s.password) s.password = "password123";
+      });
     }
     // Ensure subjects are always populated and never empty
     if (!parsed.subjects || parsed.subjects.length === 0) {
@@ -155,102 +166,6 @@ function updateNavbar() {
   }
 }
 
-// Auth Mode Switcher (Login vs Register)
-function switchStandaloneAuthMode(mode) {
-  const loginBox = document.getElementById('sa-login-container');
-  const registerBox = document.getElementById('sa-register-container');
-  const btnLogin = document.getElementById('btn-sa-login');
-  const btnReg = document.getElementById('btn-sa-register');
-
-  if (mode === 'register') {
-    loginBox.classList.add('hidden');
-    registerBox.classList.remove('hidden');
-    btnReg.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition";
-    btnLogin.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition";
-  } else {
-    registerBox.classList.add('hidden');
-    loginBox.classList.remove('hidden');
-    btnLogin.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition";
-    btnReg.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition";
-  }
-  lucide.createIcons();
-}
-
-function toggleSaRegRole(role) {
-  const rollBox = document.getElementById('sa-reg-roll-box');
-  const rollInput = document.getElementById('sa-reg-roll');
-  if (role === 'teacher') {
-    rollBox.classList.add('hidden');
-    rollInput.required = false;
-  } else {
-    rollBox.classList.remove('hidden');
-    rollInput.required = true;
-  }
-}
-
-function handleStandaloneRegister(event) {
-  event.preventDefault();
-  const store = Store.get();
-  const devId = DeviceBinding.getDeviceId();
-
-  const role = document.querySelector('input[name="sa_reg_role"]:checked').value;
-  const name = document.getElementById('sa-reg-name').value.trim();
-  const username = document.getElementById('sa-reg-username').value.trim();
-  const password = document.getElementById('sa-reg-password').value.trim();
-
-  if (role === 'student') {
-    const roll = document.getElementById('sa-reg-roll').value.trim();
-
-    // Check duplicate username or roll
-    if (store.students.some(s => s.username === username || s.roll.toLowerCase() === roll.toLowerCase())) {
-      showAlert("Username or Roll Number already registered! Please use another.", "danger");
-      return;
-    }
-
-    // Check duplicate device
-    const existingDev = store.students.find(s => s.deviceId === devId);
-    if (existingDev) {
-      showAlert(`SECURITY ALERT: This physical device is already bound to student '${existingDev.name}'. One device cannot be shared by multiple students.`, "danger");
-      return;
-    }
-
-    const newStudent = {
-      id: Date.now(),
-      name,
-      roll,
-      username,
-      deviceId: devId
-    };
-    store.students.push(newStudent);
-    Store.save(store);
-
-    showAlert(`Student account created for ${name} (${roll})! Device bound. Welcome!`, "success");
-    currentUser = { ...newStudent, role: 'student' };
-    renderStudentView();
-    navigateTo('student');
-
-  } else {
-    if (store.teachers.some(t => t.username === username)) {
-      showAlert("Username already taken by another teacher.", "danger");
-      return;
-    }
-
-    const newTeacher = {
-      id: Date.now(),
-      name,
-      username,
-      role: 'teacher'
-    };
-    store.teachers.push(newTeacher);
-    Store.save(store);
-
-    showAlert(`Faculty account created for ${name}! Welcome!`, "success");
-    currentUser = newTeacher;
-    renderTeacherView();
-    navigateTo('teacher');
-  }
-}
-
 // -------------------------------------------------------------------
 // LOGIN LOGIC & DEVICE BINDING
 // -------------------------------------------------------------------
@@ -258,10 +173,12 @@ function setLoginRole(role) {
   currentRole = role;
   ['class_teacher', 'teacher', 'student'].forEach(r => {
     const tab = document.getElementById(`tab-login-${r}`);
-    if (r === role) {
-      tab.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition";
-    } else {
-      tab.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition";
+    if (tab) {
+      if (r === role) {
+        tab.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition";
+      } else {
+        tab.className = "flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition";
+      }
     }
   });
 
@@ -270,54 +187,80 @@ function setLoginRole(role) {
   const input = document.getElementById('login-username');
 
   if (role === 'class_teacher') {
-    label.innerText = 'Authorized Class Teacher Email (Single Master Account)';
-    input.placeholder = 'prasadmhankraj21@gmail.com';
-    btn.innerText = 'Sign In as Class Teacher';
+    if (label) label.innerText = 'Class Teacher Admin Username';
+    if (input) input.placeholder = 'admin1955';
+    if (btn) btn.innerText = 'Sign In as Class Teacher';
   } else if (role === 'teacher') {
-    label.innerText = 'Faculty Username';
-    input.placeholder = 'prof_verma';
-    btn.innerText = 'Sign In as Faculty';
+    if (label) label.innerText = 'Faculty Username';
+    if (input) input.placeholder = 'e.g. prof_verma';
+    if (btn) btn.innerText = 'Sign In as Faculty';
   } else {
-    label.innerText = 'Student Username / Roll No';
-    input.placeholder = 'student_rohit';
-    btn.innerText = 'Sign In as Student';
+    if (label) label.innerText = 'Student Username / Roll No';
+    if (input) input.placeholder = 'e.g. student_rohit or Roll No';
+    if (btn) btn.innerText = 'Sign In as Student';
   }
-}
-
-function autoLogin(username, role) {
-  setLoginRole(role);
-  document.getElementById('login-username').value = username;
-  document.getElementById('login-password').value = 'password123';
-  executeLogin(username, role);
 }
 
 function handleLoginSubmit(event) {
   event.preventDefault();
   const username = document.getElementById('login-username').value.trim();
-  executeLogin(username, currentRole);
+  const password = document.getElementById('login-password').value.trim();
+  executeLogin(username, password, currentRole);
 }
 
-function executeLogin(username, role) {
+function executeLogin(username, password, role) {
   const store = Store.get();
   const devId = DeviceBinding.getDeviceId();
 
-  if (role === 'student') {
-    const student = store.students.find(s => s.username === username || s.roll.toLowerCase() === username.toLowerCase());
+  if (role === 'class_teacher') {
+    if (username.toLowerCase() !== 'admin1955' || password !== '1955') {
+      showAlert("ACCESS DENIED: Galat Admin credentials! Sirf authorized Class Teacher (admin1955) hi Admin Panel me login kar sakte hain.", "danger");
+      return;
+    }
+    const ct = store.teachers.find(t => t.role === 'class_teacher') || { id: 1, name: "Class Teacher (Admin)", username: "admin1955", password: "1955", role: "class_teacher" };
+    currentUser = ct;
+    renderClassTeacherView();
+    navigateTo('class-teacher');
+    showAlert("Welcome, Class Teacher (Admin)!", "success");
+    return;
+
+  } else if (role === 'teacher') {
+    const teacher = store.teachers.find(t => t.username.toLowerCase() === username.toLowerCase() && t.role === 'teacher');
+    if (!teacher) {
+      showAlert("Faculty record nahi mila! Sirf Class Teacher dwara registered teacher hi login kar sakte hain.", "danger");
+      return;
+    }
+    if (teacher.password && teacher.password !== password) {
+      showAlert("Galat Password! Kripya Class Teacher dwara register kiya gaya password dalein.", "danger");
+      return;
+    }
+    currentUser = teacher;
+    renderTeacherView();
+    navigateTo('teacher');
+    showAlert(`Welcome, ${currentUser.name}!`, "success");
+    return;
+
+  } else if (role === 'student') {
+    const student = store.students.find(s => s.username.toLowerCase() === username.toLowerCase() || s.roll.toLowerCase() === username.toLowerCase());
     if (!student) {
-      showAlert("Student record not found. Try 'student_rohit'.", "danger");
+      showAlert("Student record nahi mila! Sirf Class Teacher dwara enroll kiye gaye students hi login kar sakte hain.", "danger");
+      return;
+    }
+    if (student.password && student.password !== password) {
+      showAlert("Galat Password! Kripya Class Teacher dwara register kiya gaya password dalein.", "danger");
       return;
     }
 
     // 1. Check if device is bound to another student
     const otherStudent = store.students.find(s => s.deviceId === devId && s.id !== student.id);
     if (otherStudent) {
-      showAlert(`SECURITY VIOLATION: This device is already bound to '${otherStudent.name}'. Multiple student accounts on 1 device are prohibited.`, "danger");
+      showAlert(`SECURITY VIOLATION: Yeh mobile device pehle se student '${otherStudent.name}' ke account se bound hai. Ek mobile se doosra student login nahi ho sakta.`, "danger");
       return;
     }
 
     // 2. Check if student is bound to a different device
     if (student.deviceId && student.deviceId !== devId) {
-      showAlert(`ACCESS DENIED: Account bound to another device (${student.deviceId}). Contact Class Teacher to reset device binding.`, "danger");
+      showAlert(`ACCESS DENIED: Aapka account doosre device (${student.deviceId}) ke saath bound hai. Device reset karane ke liye Class Teacher se contact karein.`, "danger");
       return;
     }
 
@@ -325,41 +268,15 @@ function executeLogin(username, role) {
     if (!student.deviceId) {
       student.deviceId = devId;
       Store.save(store);
-      showAlert("Device successfully bound to your student account!", "success");
+      showAlert("Aapka device successfully is student account ke saath bind ho gaya hai!", "success");
     }
 
     currentUser = { ...student, role: 'student' };
     renderStudentView();
     navigateTo('student');
-
-  } else if (role === 'class_teacher') {
-    const validEmails = ["prasadmhankraj21@gmail.com", "classteacher@college.edu", "classteacher"];
-    if (!validEmails.includes(username.toLowerCase())) {
-      showAlert("ACCESS DENIED: Class Teacher login is strictly restricted to single authorized email (prasadmhankraj21@gmail.com).", "danger");
-      return;
-    }
-    const ct = store.teachers.find(t => t.role === 'class_teacher');
-    if (!ct) {
-      showAlert("Class Teacher master account not found.", "danger");
-      return;
-    }
-    currentUser = ct;
-    renderClassTeacherView();
-    navigateTo('class-teacher');
-
-  } else {
-
-    const teacher = store.teachers.find(t => t.username === username);
-    if (!teacher) {
-      showAlert("Faculty user not found. Try 'prof_verma'.", "danger");
-      return;
-    }
-    currentUser = teacher;
-    renderTeacherView();
-    navigateTo('teacher');
+    showAlert(`Welcome, ${currentUser.name}!`, "success");
+    return;
   }
-
-  showAlert(`Welcome, ${currentUser.name}!`, "success");
 }
 
 function logout() {
@@ -391,6 +308,7 @@ function renderClassTeacherView() {
     <tr class="hover:bg-slate-50 transition">
       <td class="p-3 font-semibold text-slate-900">${t.name}</td>
       <td class="p-3 font-mono text-xs">${t.username}</td>
+      <td class="p-3 font-mono text-xs text-indigo-700 bg-indigo-50/50 px-2 py-1 rounded">${t.password || '••••••'}</td>
       <td class="p-3">
         <span class="${t.role === 'class_teacher' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'} text-xs px-2.5 py-0.5 rounded-full font-bold">
           ${t.role === 'class_teacher' ? 'Class Teacher' : 'Faculty'}
@@ -412,6 +330,7 @@ function renderClassTeacherView() {
       <td class="p-3 font-mono font-bold text-xs text-slate-900">${s.roll}</td>
       <td class="p-3 font-semibold text-slate-900">${s.name}</td>
       <td class="p-3 font-mono text-xs">${s.username}</td>
+      <td class="p-3 font-mono text-xs text-emerald-700 bg-emerald-50/50 px-2 py-1 rounded">${s.password || '••••••'}</td>
       <td class="p-3">
         ${s.deviceId 
           ? `<span class="font-mono text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">${s.deviceId}</span>`
@@ -461,10 +380,16 @@ function handleAddTeacher(event) {
   const store = Store.get();
   const name = document.getElementById('add-teacher-name').value.trim();
   const username = document.getElementById('add-teacher-user').value.trim();
+  const password = document.getElementById('add-teacher-pass').value.trim();
 
-  store.teachers.push({ id: Date.now(), name, username, role: 'teacher' });
+  if (store.teachers.some(t => t.username.toLowerCase() === username.toLowerCase())) {
+    showAlert(`Teacher username '${username}' already exists!`, "danger");
+    return;
+  }
+
+  store.teachers.push({ id: Date.now(), name, username, password, role: 'teacher' });
   Store.save(store);
-  showAlert(`Teacher '${name}' added!`, "success");
+  showAlert(`Teacher '${name}' registered with password! Username: ${username}`, "success");
   event.target.reset();
   renderClassTeacherView();
 }
@@ -483,10 +408,16 @@ function handleAddStudent(event) {
   const name = document.getElementById('add-student-name').value.trim();
   const roll = document.getElementById('add-student-roll').value.trim();
   const username = document.getElementById('add-student-user').value.trim();
+  const password = document.getElementById('add-student-pass').value.trim();
 
-  store.students.push({ id: Date.now(), name, roll, username, deviceId: null });
+  if (store.students.some(s => s.username.toLowerCase() === username.toLowerCase() || s.roll.toLowerCase() === roll.toLowerCase())) {
+    showAlert(`Student username '${username}' or roll '${roll}' already exists!`, "danger");
+    return;
+  }
+
+  store.students.push({ id: Date.now(), name, roll, username, password, deviceId: null });
   Store.save(store);
-  showAlert(`Student '${name}' (${roll}) enrolled!`, "success");
+  showAlert(`Student '${name}' (${roll}) enrolled with password! Username: ${username}`, "success");
   event.target.reset();
   renderClassTeacherView();
 }

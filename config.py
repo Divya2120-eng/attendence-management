@@ -18,6 +18,8 @@ class Config:
     # SQLite fallback file
     SQLITE_DB = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'attendance.db')
 
-    # Exclusive Single Class Teacher / Admin Authorized Email
+    # Exclusive Single Class Teacher / Admin Credentials
+    ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin1955')
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '1955')
     CLASS_TEACHER_EMAIL = os.environ.get('CLASS_TEACHER_EMAIL', 'prasadmhankraj21@gmail.com')
     CLASS_TEACHER_BACKUP_EMAIL = 'classteacher@college.edu'

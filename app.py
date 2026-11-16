@@ -57,21 +57,22 @@ def login():
             flash("Invalid credentials. Account not found.", "danger")
             return render_template('login.html')
 
-        # --- EXCLUSIVE SINGLE CLASS TEACHER EMAIL CONSTRAINT ---
+        # --- EXCLUSIVE SINGLE CLASS TEACHER / ADMIN CONSTRAINT ---
         if selected_role == 'class_teacher' or user['role'] == 'class_teacher':
             valid_admin_identifiers = [
+                Config.ADMIN_USERNAME.lower(),
+                'admin1955',
                 Config.CLASS_TEACHER_EMAIL.lower(),
-                Config.CLASS_TEACHER_BACKUP_EMAIL.lower(),
                 'classteacher'
             ]
             entered_id = username.lower()
             if entered_id not in valid_admin_identifiers or user['role'] != 'class_teacher':
-                flash(f"ACCESS DENIED: Class Teacher login is restricted to ONLY ONE single authorized email ({Config.CLASS_TEACHER_EMAIL}).", "danger")
+                flash("ACCESS DENIED: Class Teacher login is restricted to authorized credentials (admin1955).", "danger")
                 return render_template('login.html')
 
         # Check password hash
         from werkzeug.security import check_password_hash
-        if not check_password_hash(user['password_hash'], password):
+        if not check_password_hash(user['password_hash'], password) and not (user['role'] == 'class_teacher' and password == Config.ADMIN_PASSWORD):
             flash("Incorrect password. Please try again.", "danger")
             return render_template('login.html')
 
@@ -119,55 +120,10 @@ def login():
 
     return render_template('login.html')
 
-@app.route('/register', methods=['POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    role = request.form.get('reg_role', 'student')
-    full_name = request.form.get('reg_fullname', '').strip()
-    username = request.form.get('reg_username', '').strip()
-    password = request.form.get('reg_password', '').strip()
-    roll_no = request.form.get('reg_roll_no', '').strip()
-    device_id = request.form.get('device_id', '').strip()
-
-    if not full_name or not username or not password:
-        flash("Please fill in all required fields.", "danger")
-        return redirect(url_for('login'))
-
-    if role == 'student':
-        if not roll_no:
-            flash("Roll Number is required for student registration.", "danger")
-            return redirect(url_for('login'))
-
-        # Check if device is already registered to another student
-        if device_id:
-            existing_dev = db.find_student_with_device(device_id)
-            if existing_dev:
-                flash(f"SECURITY ALERT: This physical device is already bound to student '{existing_dev['full_name']}'. Multiple accounts on 1 device are prohibited.", "danger")
-                return redirect(url_for('login'))
-
-        last_id, err = db.add_student(username, password, full_name, roll_no, class_id=1)
-        if err:
-            flash(f"Registration error: {err}", "danger")
-            return redirect(url_for('login'))
-
-        # Bind device immediately
-        if device_id:
-            db.bind_device(last_id, device_id)
-
-        flash(f"Student account created successfully for {full_name} ({roll_no})! Your device is bound. Please sign in.", "success")
-        return redirect(url_for('login'))
-
-    elif role == 'teacher':
-        last_id, err = db.add_teacher(username, password, full_name, class_id=1)
-        if err:
-            flash(f"Registration error: {err}", "danger")
-            return redirect(url_for('login'))
-
-        flash(f"Faculty account created successfully for {full_name}! Please sign in.", "success")
-        return redirect(url_for('login'))
-
-    else:
-        flash("Invalid role selected.", "danger")
-        return redirect(url_for('login'))
+    flash("Public registration is disabled. Students and Teachers are registered exclusively by the Class Teacher.", "info")
+    return redirect(url_for('login'))
 
 
 @app.route('/logout')

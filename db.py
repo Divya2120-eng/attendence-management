@@ -189,9 +189,10 @@ class Database:
             conn.commit()
 
         self._seed_default_data(conn, cursor)
-        # Ensure single Class Teacher has designated authorized email
+        # Ensure single Class Teacher has designated authorized credentials: admin1955 / 1955
         param = "%s" if self.use_mysql else "?"
-        cursor.execute(f"UPDATE users SET email = {param} WHERE role = 'class_teacher'", (Config.CLASS_TEACHER_EMAIL,))
+        cursor.execute(f"UPDATE users SET username = {param}, password_hash = {param}, email = {param} WHERE role = 'class_teacher'", 
+                       (Config.ADMIN_USERNAME, generate_password_hash(Config.ADMIN_PASSWORD), Config.CLASS_TEACHER_EMAIL))
         if not self.use_mysql:
             conn.commit()
         conn.close()
@@ -204,6 +205,7 @@ class Database:
         if count == 0:
             print("[DB Seed] Seeding initial data...")
             default_pwd = generate_password_hash("password123")
+            admin_pwd = generate_password_hash(Config.ADMIN_PASSWORD)
 
             param = "%s" if self.use_mysql else "?"
             cursor.execute(f"INSERT INTO classes (name, branch, year) VALUES ({param}, {param}, {param})", 
@@ -213,7 +215,7 @@ class Database:
             cursor.execute(f"""
             INSERT INTO users (username, password_hash, full_name, email, role, class_id)
             VALUES ({param}, {param}, {param}, {param}, {param}, {param})
-            """, ('classteacher', default_pwd, 'Prof. Prasad (Class Teacher)', Config.CLASS_TEACHER_EMAIL, 'class_teacher', class_id))
+            """, (Config.ADMIN_USERNAME, admin_pwd, 'Class Teacher (Admin)', Config.CLASS_TEACHER_EMAIL, 'class_teacher', class_id))
             ct_id = cursor.lastrowid
 
 

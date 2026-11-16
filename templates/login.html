@@ -64,18 +64,6 @@
           <p class="text-xs text-slate-500 mt-1">Select your role or enter your institutional credentials.</p>
         </div>
 
-        <!-- Toggle between Login & Register -->
-        <div class="flex rounded-xl bg-slate-100 p-1 mb-6">
-          <button type="button" onclick="switchFormMode('login')" id="btn-mode-login" 
-                  class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-700 shadow-sm transition">
-            Sign In (Login)
-          </button>
-          <button type="button" onclick="switchFormMode('register')" id="btn-mode-register" 
-                  class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-indigo-600 transition">
-            Create New Account (Sign Up)
-          </button>
-        </div>
-
         <!-- 1. LOGIN FORM -->
         <div id="form-login-box">
           <!-- Role Selector Tabs -->
@@ -109,7 +97,7 @@
                 </span>
                 <input type="text" name="username" id="username-input" required 
                        class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                       placeholder="e.g. student_rohit or CSE-2023-01">
+                       placeholder="e.g. student_rohit or Roll No">
               </div>
             </div>
 
@@ -125,7 +113,6 @@
                        class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
                        placeholder="••••••••">
               </div>
-              <p class="text-[11px] text-slate-400 mt-1">Default demo password: <code class="text-indigo-600 font-mono font-bold">password123</code></p>
             </div>
 
             <button type="submit" 
@@ -135,122 +122,8 @@
             </button>
           </form>
 
-          <!-- Don't have account prompt -->
-          <div class="text-center mt-4">
-            <button type="button" onclick="switchFormMode('register')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline">
-              Don't have an account? Click here to Create Account (Register)
-            </button>
-          </div>
-        </div>
-
-        <!-- 2. REGISTRATION FORM (CREATE ACCOUNT) -->
-        <div id="form-register-box" class="hidden">
-          <form action="/register" method="POST" class="space-y-4">
-            <input type="hidden" name="device_id" class="login-device-id" value="">
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                I am registering as:
-              </label>
-              <div class="grid grid-cols-2 gap-2">
-                <label class="border border-slate-300 rounded-xl p-2.5 flex items-center space-x-2 cursor-pointer hover:border-indigo-500">
-                  <input type="radio" name="reg_role" value="student" checked onchange="toggleRegFields('student')">
-                  <span class="text-xs font-bold text-slate-800">Student</span>
-                </label>
-                <label class="border border-slate-300 rounded-xl p-2.5 flex items-center space-x-2 cursor-pointer hover:border-indigo-500">
-                  <input type="radio" name="reg_role" value="teacher" onchange="toggleRegFields('teacher')">
-                  <span class="text-xs font-bold text-slate-800">Teacher / Faculty</span>
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name</label>
-              <input type="text" name="reg_fullname" required placeholder="e.g. Vikas Gupta" 
-                     class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
-            </div>
-
-            <div id="reg-roll-box">
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Roll Number (Student)</label>
-              <input type="text" name="reg_roll_no" id="reg-roll-input" required placeholder="e.g. CSE-2023-06" 
-                     class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-mono">
-              <p class="text-[10px] text-slate-400 mt-0.5">Enrolled into: Third Year CSE</p>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Username</label>
-              <input type="text" name="reg_username" required placeholder="e.g. vikas_gupta" 
-                     class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm">
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Create Password</label>
-              <input type="password" name="reg_password" required placeholder="••••••••" 
-                     class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
-            </div>
-
-            <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-900 flex items-center space-x-2">
-              <i data-lucide="smartphone" class="w-4 h-4 text-indigo-600 flex-shrink-0"></i>
-              <span>Your physical device hardware fingerprint will bind to this new account automatically.</span>
-            </div>
-
-            <button type="submit" 
-                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-sm">
-              <i data-lucide="user-plus" class="w-4 h-4"></i>
-              <span>Create Account Now</span>
-            </button>
-          </form>
-
-          <div class="text-center mt-4">
-            <button type="button" onclick="switchFormMode('login')" class="text-xs font-semibold text-slate-600 hover:text-slate-900 underline">
-              Already have an account? Sign In here
-            </button>
-          </div>
-        </div>
-
-
-        <!-- Quick 1-Click Demo Accounts -->
-        <div class="mt-8 pt-6 border-t border-slate-100">
-          <p class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 flex items-center">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500 mr-1.5"></i>
-            Quick Test Accounts (Click to Auto-Fill)
-          </p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            <button type="button" onclick="fillCredentials('prasadmhankraj21@gmail.com', 'password123', 'class_teacher')" 
-                    class="p-2.5 border border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-indigo-900 rounded-xl text-left transition flex items-center space-x-2">
-              <div class="w-7 h-7 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-xs">CT</div>
-              <div>
-                <p class="font-bold">Prof. Prasad</p>
-                <p class="text-[10px] text-indigo-600 font-mono">prasadmhankraj21@gmail.com</p>
-              </div>
-            </button>
-
-            <button type="button" onclick="fillCredentials('prof_verma', 'password123', 'teacher')" 
-                    class="p-2.5 border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-left transition flex items-center space-x-2">
-              <div class="w-7 h-7 bg-slate-700 text-white rounded-lg flex items-center justify-center font-bold text-xs">F1</div>
-              <div>
-                <p class="font-bold">Prof. Verma</p>
-                <p class="text-[10px] text-slate-500">Teacher (DBMS)</p>
-              </div>
-            </button>
-
-            <button type="button" onclick="fillCredentials('student_rohit', 'password123', 'student')" 
-                    class="p-2.5 border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-left transition flex items-center space-x-2">
-              <div class="w-7 h-7 bg-emerald-600 text-white rounded-lg flex items-center justify-center font-bold text-xs">S1</div>
-              <div>
-                <p class="font-bold">Rohit Kumar</p>
-                <p class="text-[10px] text-slate-500">Student • Roll 01</p>
-              </div>
-            </button>
-
-            <button type="button" onclick="fillCredentials('student_priya', 'password123', 'student')" 
-                    class="p-2.5 border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-left transition flex items-center space-x-2">
-              <div class="w-7 h-7 bg-emerald-600 text-white rounded-lg flex items-center justify-center font-bold text-xs">S2</div>
-              <div>
-                <p class="font-bold">Priya Singh</p>
-                <p class="text-[10px] text-slate-500">Student • Roll 02</p>
-              </div>
-            </button>
+          <div class="mt-6 p-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs text-slate-500">
+            <span class="font-medium">Students & Faculty: Sign in using the credentials registered by your Class Teacher.</span>
           </div>
         </div>
 
@@ -314,8 +187,8 @@
     const btn = document.getElementById('btn-submit-text');
 
     if (role === 'class_teacher') {
-      label.innerText = 'Authorized Class Teacher Email (Single Master Account)';
-      input.placeholder = 'prasadmhankraj21@gmail.com';
+      label.innerText = 'Class Teacher Admin Username';
+      input.placeholder = 'admin1955';
       btn.innerText = 'Sign In as Class Teacher';
     } else if (role === 'teacher') {
       label.innerText = 'Faculty Username';
@@ -323,17 +196,10 @@
       btn.innerText = 'Sign In as Faculty';
     } else {
       label.innerText = 'Student Username / Roll No';
-      input.placeholder = 'e.g. student_rohit';
+      input.placeholder = 'e.g. student_rohit or Roll No';
       btn.innerText = 'Sign In as Student';
     }
 
-  }
-
-  function fillCredentials(u, p, role) {
-    switchFormMode('login');
-    setRole(role);
-    document.getElementById('username-input').value = u;
-    document.getElementById('password-input').value = p;
   }
 
   // Update display with persistent device id
