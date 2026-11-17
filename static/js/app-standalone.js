@@ -382,6 +382,20 @@ function handleAddTeacher(event) {
   const username = document.getElementById('add-teacher-user').value.trim();
   const password = document.getElementById('add-teacher-pass').value.trim();
 
+  // Strict Validation: Name must contain ONLY alphabets, spaces, and dots (NO NUMBERS)
+  const nameRegex = /^[A-Za-z\s.]+$/;
+  if (!name || !nameRegex.test(name) || !/[A-Za-z]{2,}/.test(name)) {
+    showAlert("Galat Naam! Teacher Name me sirf alphabets (A-Z, a-z) dalein. Numbers (0-9) bilkul allow nahi hain.", "danger");
+    return;
+  }
+
+  // Strict Validation: Username must contain alphabetic characters and be 3-30 chars
+  const usernameRegex = /^[A-Za-z0-9_]{3,30}$/;
+  if (!username || !usernameRegex.test(username) || !/[A-Za-z]/.test(username)) {
+    showAlert("Galat Username! Username me kam se kam 3 characters hone chahiye aur usme alphabets hona anivarya hai.", "danger");
+    return;
+  }
+
   if (store.teachers.some(t => t.username.toLowerCase() === username.toLowerCase())) {
     showAlert(`Teacher username '${username}' already exists!`, "danger");
     return;
@@ -409,6 +423,25 @@ function handleAddStudent(event) {
   const roll = document.getElementById('add-student-roll').value.trim();
   const username = document.getElementById('add-student-user').value.trim();
   const password = document.getElementById('add-student-pass').value.trim();
+
+  // Strict Validation: Name must contain ONLY alphabets, spaces, and dots (NO NUMBERS)
+  const nameRegex = /^[A-Za-z\s.]+$/;
+  if (!name || !nameRegex.test(name) || !/[A-Za-z]{2,}/.test(name)) {
+    showAlert("Galat Naam! Student Name me sirf alphabets (A-Z, a-z) dalein. Numbers (0-9) bilkul allow nahi hain.", "danger");
+    return;
+  }
+
+  // Strict Validation: Username must contain alphabetic characters and be 3-30 chars
+  const usernameRegex = /^[A-Za-z0-9_]{3,30}$/;
+  if (!username || !usernameRegex.test(username) || !/[A-Za-z]/.test(username)) {
+    showAlert("Galat Username! Username me kam se kam 3 characters hone chahiye aur usme alphabets hona anivarya hai.", "danger");
+    return;
+  }
+
+  if (!roll) {
+    showAlert("Roll Number dalna zaroori hai!", "danger");
+    return;
+  }
 
   if (store.students.some(s => s.username.toLowerCase() === username.toLowerCase() || s.roll.toLowerCase() === roll.toLowerCase())) {
     showAlert(`Student username '${username}' or roll '${roll}' already exists!`, "danger");

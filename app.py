@@ -165,10 +165,19 @@ def add_teacher():
     if session.get('role') != 'class_teacher':
         return jsonify({'error': 'Unauthorized'}), 403
 
-    username = request.form.get('username')
-    password = request.form.get('password')
-    full_name = request.form.get('full_name')
-    email = request.form.get('email', '')
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
+    full_name = request.form.get('full_name', '').strip()
+    email = request.form.get('email', '').strip()
+
+    import re
+    if not full_name or not re.match(r'^[A-Za-z\s.]+$', full_name) or not re.search(r'[A-Za-z]{2,}', full_name):
+        flash("Galat Naam: Teacher Name me sirf alphabets (A-Z, a-z) dalein. Numbers (0-9) allow nahi hain.", "danger")
+        return redirect(url_for('class_teacher_dashboard'))
+
+    if not username or not re.match(r'^[A-Za-z0-9_]{3,30}$', username) or not re.search(r'[A-Za-z]', username):
+        flash("Galat Username: Username me alphabets hona anivarya hai.", "danger")
+        return redirect(url_for('class_teacher_dashboard'))
 
     last_id, err = db.add_teacher(username, password, full_name, email)
     if err:
@@ -194,11 +203,20 @@ def add_student():
     if session.get('role') != 'class_teacher':
         return jsonify({'error': 'Unauthorized'}), 403
 
-    username = request.form.get('username')
-    password = request.form.get('password')
-    full_name = request.form.get('full_name')
-    roll_no = request.form.get('roll_no')
-    email = request.form.get('email', '')
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
+    full_name = request.form.get('full_name', '').strip()
+    roll_no = request.form.get('roll_no', '').strip()
+    email = request.form.get('email', '').strip()
+
+    import re
+    if not full_name or not re.match(r'^[A-Za-z\s.]+$', full_name) or not re.search(r'[A-Za-z]{2,}', full_name):
+        flash("Galat Naam: Student Name me sirf alphabets (A-Z, a-z) dalein. Numbers (0-9) allow nahi hain.", "danger")
+        return redirect(url_for('class_teacher_dashboard'))
+
+    if not username or not re.match(r'^[A-Za-z0-9_]{3,30}$', username) or not re.search(r'[A-Za-z]', username):
+        flash("Galat Username: Username me alphabets hona anivarya hai.", "danger")
+        return redirect(url_for('class_teacher_dashboard'))
 
     last_id, err = db.add_student(username, password, full_name, roll_no, email)
     if err:
